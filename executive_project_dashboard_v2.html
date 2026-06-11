@@ -1,0 +1,2913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Executive Project Analytics Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f6fa;--white:#ffffff;--border:#e8ecf4;--border2:#d4d9e8;
+  --text:#1a2235;--text2:#4a5568;--text3:#8a94a6;
+  --blue:#2563eb;--blue-light:#eff4ff;--blue-mid:#dbeafe;--blue-dark:#1d4ed8;
+  --teal:#0891b2;--teal-light:#ecfeff;--teal-dark:#0e7490;
+  --green:#059669;--green-light:#ecfdf5;--green-dark:#047857;
+  --amber:#d97706;--amber-light:#fffbeb;--amber-dark:#b45309;
+  --red:#dc2626;--red-light:#fef2f2;--red-dark:#b91c1c;
+  --purple:#7c3aed;--purple-light:#f5f3ff;--purple-dark:#6d28d9;
+  --indigo:#4338ca;--slate:#64748b;--slate-light:#f1f5f9;
+  --sans:'Inter',sans-serif;--dm:'DM Sans',sans-serif;
+  --shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+  --shadow-lg:0 4px 20px rgba(0,0,0,.10),0 1px 4px rgba(0,0,0,.04);
+  --shadow-xl:0 8px 30px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.06);
+  --radius:18px;--radius-sm:12px;--radius-xs:8px;
+}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13px;line-height:1.5}
+
+/* ─── Upload Screen ─────────────────────────────────────────── */
+#uploadScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:48px 24px;background:linear-gradient(160deg,#f0f4ff 0%,#fafbff 60%,#f0fdf4 100%)}
+.up-brand{display:flex;align-items:center;gap:10px;margin-bottom:48px}
+.up-brand-dot{width:34px;height:34px;background:linear-gradient(135deg,#2563eb,#0891b2);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;letter-spacing:-.5px}
+.up-brand-name{font-weight:700;font-size:18px;letter-spacing:-.3px;color:var(--text)}
+.up-brand-name span{color:var(--blue)}
+.up-headline{font-size:32px;font-weight:700;letter-spacing:-.8px;text-align:center;color:var(--text);margin-bottom:10px;font-family:var(--dm)}
+.up-sub{font-size:15px;color:var(--text2);text-align:center;margin-bottom:48px;max-width:520px}
+.up-card-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:100%;max-width:720px;margin-bottom:28px}
+.up-card{background:var(--white);border:2px dashed var(--border2);border-radius:var(--radius);padding:32px 24px 28px;text-align:center;cursor:pointer;position:relative;transition:border-color .2s,box-shadow .2s,transform .15s}
+.up-card:hover,.up-card.drag{border-color:var(--blue);box-shadow:0 0 0 4px rgba(37,99,235,.08);transform:translateY(-1px)}
+.up-card.loaded{border-style:solid;border-color:var(--blue);background:var(--blue-light)}
+.up-card.error{border-color:var(--red);background:var(--red-light)}
+.up-card input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.up-tag{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:12px}
+.up-icon{font-size:30px;margin-bottom:12px}
+.up-cname{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.up-chint{font-size:12px;color:var(--text3)}
+.up-cfname{font-size:11px;font-weight:600;color:var(--blue);margin-top:10px;display:none;font-family:monospace;word-break:break-all}
+.up-meta{font-size:11px;color:var(--text3);margin-top:6px;display:none}
+.up-date-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:var(--blue);color:#fff;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;display:none}
+.up-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+.up-error{color:var(--red);font-size:12px;margin-top:8px;display:none;max-width:680px;text-align:center}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 24px;border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;letter-spacing:-.01em}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.3)}
+.btn-primary:hover{background:var(--blue-dark);box-shadow:0 4px 16px rgba(37,99,235,.4)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.btn-ghost{background:var(--white);color:var(--text2);border:1.5px solid var(--border2)}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:var(--red-dark)}
+
+/* ─── Sheet Selector Modal ──────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--white);border-radius:var(--radius);padding:28px;max-width:480px;width:90%;box-shadow:var(--shadow-xl);max-height:80vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:8px;font-family:var(--dm)}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+.sheet-list{display:flex;flex-direction:column;gap:8px}
+.sheet-option{padding:14px 16px;border:1.5px solid var(--border2);border-radius:var(--radius-xs);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:space-between}
+.sheet-option:hover{border-color:var(--blue);background:var(--blue-light)}
+.sheet-option.selected{border-color:var(--blue);background:var(--blue-light)}
+.sheet-name{font-weight:600;font-size:13px}
+.sheet-info{font-size:11px;color:var(--text3);margin-top:2px}
+.sheet-dim{font-size:11px;color:var(--text3);font-family:monospace}
+
+/* ─── Topbar ────────────────────────────────────────────────── */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:200;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.tb-brand{display:flex;align-items:center;gap:9px}
+.tb-dot{width:28px;height:28px;background:linear-gradient(135deg,#2563eb,#0891b2);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px}
+.tb-title{font-weight:700;font-size:15px;letter-spacing:-.3px;color:var(--text)}
+.tb-divider{width:1px;height:22px;background:var(--border)}
+.file-dates{display:flex;align-items:center;gap:8px}
+.date-chip{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:600;letter-spacing:.01em}
+.date-chip-prev{background:var(--slate-light);color:#475569;border:1px solid #e2e8f0}
+.date-chip-curr{background:var(--blue-light);color:var(--blue);border:1px solid #bfdbfe}
+.date-chip-dot{width:6px;height:6px;border-radius:50%}
+.tb-spacer{flex:1}
+.tb-actions{display:flex;gap:8px;align-items:center}
+.tb-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border2);background:transparent;color:var(--text2);transition:all .15s}
+.tb-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+.tb-btn.active{background:var(--blue-light);border-color:var(--blue);color:var(--blue)}
+.export-menu{position:relative}
+.export-dropdown{position:absolute;top:100%;right:0;margin-top:6px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-xs);box-shadow:var(--shadow-lg);display:none;flex-direction:column;min-width:180px;z-index:300}
+.export-dropdown.show{display:flex}
+.export-item{padding:10px 14px;font-size:12px;font-weight:500;cursor:pointer;transition:background .15s;color:var(--text);border-bottom:1px solid var(--border)}
+.export-item:last-child{border-bottom:none}
+.export-item:hover{background:var(--blue-light);color:var(--blue)}
+
+/* ─── Navigation ────────────────────────────────────────────── */
+.nav-bar{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.nav-bar::-webkit-scrollbar{display:none}
+.nav-btn{padding:12px 16px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s;letter-spacing:.01em;text-transform:uppercase}
+.nav-btn:hover{color:var(--text2)}
+.nav-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+#app{display:none;flex-direction:column;min-height:100vh}
+.dash-main{flex:1;padding:28px;max-width:1600px;margin:0 auto;width:100%}
+.view{display:none}
+.view.active{display:block}
+
+/* ─── Executive Summary ─────────────────────────────────────── */
+.exec-summary{margin-bottom:28px}
+.exec-title{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:14px}
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:22px}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:22px 20px 18px;position:relative;overflow:hidden;transition:box-shadow .2s,transform .15s;cursor:default}
+.kpi:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0}
+.kpi.kb::after{background:linear-gradient(90deg,#2563eb,#60a5fa)}
+.kpi.kt::after{background:linear-gradient(90deg,#0891b2,#22d3ee)}
+.kpi.kg::after{background:linear-gradient(90deg,#059669,#34d399)}
+.kpi.ka::after{background:linear-gradient(90deg,#d97706,#fbbf24)}
+.kpi.kp::after{background:linear-gradient(90deg,#7c3aed,#a78bfa)}
+.kpi.kr::after{background:linear-gradient(90deg,#dc2626,#f87171)}
+.kpi.ki::after{background:linear-gradient(90deg,#4338ca,#818cf8)}
+.kpi-icon{font-size:22px;margin-bottom:10px;opacity:.85}
+.kpi-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.kpi-val{font-size:26px;font-weight:700;color:var(--text);letter-spacing:-.5px;line-height:1.1;margin-bottom:6px}
+.kpi-prev{font-size:11px;color:var(--text3);margin-bottom:4px}
+.kpi-sub{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;font-weight:600}
+.kpi-delta{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700}
+.kpi-up{background:var(--green-light);color:var(--green-dark)}
+.kpi-dn{background:var(--red-light);color:var(--red-dark)}
+.kpi-fl{background:var(--slate-light);color:var(--slate)}
+
+/* ─── NEW: Executive Alerts ─────────────────────────────────── */
+.alert-panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-bottom:22px;box-shadow:var(--shadow)}
+.alert-panel-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2)}
+.alert-list{display:flex;flex-direction:column;gap:8px}
+.alert-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-xs);font-size:13px;font-weight:500;transition:background .15s}
+.alert-item:hover{background:var(--bg)}
+.alert-icon{font-size:16px;flex-shrink:0}
+.alert-item.critical{background:var(--red-light);color:var(--red-dark);border:1px solid #fecaca}
+.alert-item.warning{background:var(--amber-light);color:var(--amber-dark);border:1px solid #fde68a}
+.alert-item.info{background:var(--blue-light);color:var(--blue-dark);border:1px solid #bfdbfe}
+.alert-item.success{background:var(--green-light);color:var(--green-dark);border:1px solid #a7f3d0}
+.alert-text{flex:1}
+.alert-count{font-weight:700;font-family:monospace;font-size:13px}
+
+/* ─── NEW: Collapsible Project Detail ─────────────────────── */
+.collapsible-section{margin-bottom:16px;border:1px solid var(--border);border-radius:var(--radius-xs);overflow:hidden;background:var(--white)}
+.collapsible-header{padding:12px 16px;background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .15s;font-size:13px;font-weight:600;color:var(--text2)}
+.collapsible-header:hover{background:var(--blue-light)}
+.collapsible-header::after{content:'▼';font-size:10px;color:var(--text3);transition:transform .2s}
+.collapsible-section.open .collapsible-header::after{transform:rotate(180deg)}
+.collapsible-body{padding:16px;display:none}
+.collapsible-section.open .collapsible-body{display:block}
+
+/* ─── NEW: Revenue Unavailable ────────────────────────────── */
+.revenue-unavailable{text-align:center;padding:48px 24px;color:var(--text3)}
+.revenue-unavailable-icon{font-size:36px;margin-bottom:12px;opacity:.5}
+.revenue-unavailable-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+.revenue-unavailable-sub{font-size:13px;color:var(--text2)}
+
+/* ─── NEW: Exceptions Page ────────────────────────────────── */
+.exception-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center;transition:box-shadow .2s}
+.exception-card:hover{box-shadow:var(--shadow-lg)}
+.exception-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0}
+.exception-card.critical::after{background:var(--red)}
+.exception-card.warning::after{background:var(--amber)}
+.exception-card.info::after{background:var(--blue)}
+.exception-count{font-size:28px;font-weight:700;color:var(--text);margin-bottom:4px}
+.exception-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+
+/* ─── Panels & Grids ────────────────────────────────────────── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px}
+.grid-32{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px}
+.grid-23{display:grid;grid-template-columns:1fr 2fr;gap:20px;margin-bottom:20px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:20px}
+.grid-full{margin-bottom:20px}
+
+.panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.panel-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px}
+.panel-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2)}
+.panel-sub{font-size:11px;color:var(--text3)}
+.panel-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:600;background:var(--blue-light);color:var(--blue)}
+.chart-wrap{position:relative}
+
+/* ─── Comparison Blocks ─────────────────────────────────────── */
+.compare-row{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-bottom:16px}
+.compare-block{background:var(--bg);border-radius:var(--radius-xs);padding:14px 16px}
+.compare-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.compare-val{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.compare-arrow{font-size:20px;color:var(--text3);text-align:center}
+.compare-detail{font-size:11px;color:var(--text3);margin-top:4px}
+.cb-prev .compare-label{color:var(--slate)}
+.cb-curr .compare-label{color:var(--blue)}
+.cb-curr .compare-val{color:var(--blue)}
+
+/* ─── Insights & Tags ─────────────────────────────────────── */
+.insight-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.insight-tag{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid}
+.it-blue{background:var(--blue-light);color:var(--blue);border-color:#bfdbfe}
+.it-green{background:var(--green-light);color:var(--green);border-color:#a7f3d0}
+.it-amber{background:var(--amber-light);color:var(--amber);border-color:#fde68a}
+.it-red{background:var(--red-light);color:var(--red);border-color:#fecaca}
+.it-purple{background:var(--purple-light);color:var(--purple);border-color:#ddd6fe}
+.it-teal{background:var(--teal-light);color:var(--teal);border-color:#a5f3fc}
+.it-slate{background:var(--slate-light);color:var(--slate);border-color:#e2e8f0}
+
+/* ─── Stat Bars ─────────────────────────────────────────────── */
+.stat-bar-list{display:flex;flex-direction:column;gap:12px}
+.stat-bar-row{display:flex;align-items:center;gap:12px}
+.stat-bar-label{font-size:12px;color:var(--text2);font-weight:500;min-width:0;flex:0 0 160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat-bar-track{flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:5px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.stat-bar-val{font-family:monospace;font-size:12px;font-weight:600;color:var(--text2);min-width:50px;text-align:right}
+.stat-bar-pct{font-size:11px;color:var(--text3);min-width:40px;text-align:right}
+
+/* ─── Donut Stats ───────────────────────────────────────────── */
+.donut-stats{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.donut-stat{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;font-size:12px;transition:background .15s}
+.donut-stat:hover{background:var(--bg)}
+.ds-label{display:flex;align-items:center;gap:7px;font-weight:500;color:var(--text2)}
+.ds-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ds-val{font-weight:700;color:var(--text);font-family:monospace;font-size:12px}
+
+/* ─── Search ────────────────────────────────────────────────── */
+.search-box{display:flex;gap:10px;margin-bottom:20px}
+.search-input{flex:1;padding:12px 18px;border:1.5px solid var(--border2);border-radius:var(--radius-xs);font-family:var(--sans);font-size:14px;color:var(--text);background:var(--white);outline:none;transition:border-color .2s,box-shadow .2s}
+.search-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.search-btn{padding:12px 22px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius-xs);font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s}
+.search-btn:hover{background:var(--blue-dark)}
+.search-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-chip{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);cursor:pointer;transition:all .15s}
+.filter-chip:hover{border-color:var(--blue);color:var(--blue)}
+.filter-chip.active{background:var(--blue-light);border-color:var(--blue);color:var(--blue)}
+
+/* ─── Project Cards ─────────────────────────────────────────── */
+.proj-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow);transition:box-shadow .2s}
+.proj-card:hover{box-shadow:var(--shadow-lg)}
+.proj-card-header{background:linear-gradient(135deg,var(--blue-light),#f0f9ff);padding:20px 22px;border-bottom:1px solid var(--border)}
+.proj-name{font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:-.2px}
+.proj-id{font-size:11px;font-family:monospace;color:var(--text3);background:var(--white);border:1px solid var(--border2);padding:2px 8px;border-radius:5px;display:inline-block}
+.proj-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.proj-card-body{padding:20px 22px}
+.proj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.proj-field{display:flex;flex-direction:column;gap:3px}
+.pf-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+.pf-val{font-size:13px;font-weight:500;color:var(--text)}
+.pf-val-big{font-size:22px;font-weight:700;color:var(--blue);letter-spacing:-.3px}
+.pf-delta{font-size:11px;font-weight:600;margin-top:2px}
+.proj-section-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin:20px 0 12px;padding-top:16px;border-top:1px solid var(--border)}
+.no-result{text-align:center;padding:48px;color:var(--text3)}
+.no-result-icon{font-size:36px;margin-bottom:12px;opacity:.5}
+
+/* ─── Search Results ──────────────────────────────────────── */
+.search-results-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:320px;overflow-y:auto}
+.search-result-item{padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-xs);cursor:pointer;transition:all .15s;background:var(--white);display:flex;align-items:center;justify-content:space-between}
+.search-result-item:hover{border-color:var(--blue);background:var(--blue-light)}
+.search-result-item .sri-file{font-size:10px;color:var(--text3);margin-top:2px}
+.sri-name{font-weight:600;font-size:13px;color:var(--text)}
+.sri-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.sri-val{font-size:13px;font-weight:700;color:var(--blue);font-family:monospace}
+
+/* ─── Distribution Cards ────────────────────────────────────── */
+.dist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:12px}
+.dist-card{background:var(--bg);border-radius:var(--radius-xs);padding:16px 18px;border:1px solid var(--border);transition:all .15s}
+.dist-card:hover{border-color:var(--blue);background:var(--blue-light)}
+.dc-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.dc-metric{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+.dc-count{font-size:24px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.dc-unit{font-size:12px;color:var(--text3);font-weight:500}
+.dc-pct{font-size:12px;color:var(--text3)}
+.dc-bar{height:4px;border-radius:2px;margin-top:10px;background:var(--border)}
+.dc-bar-fill{height:100%;border-radius:2px}
+
+/* ─── Table Styles ────────────────────────────────────────── */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{text-align:left;padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);border-bottom:2px solid var(--border);background:var(--bg)}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2)}
+.data-table tr:hover td{background:var(--blue-light)}
+.data-table .num{text-align:right;font-family:monospace}
+.data-table .mono{font-family:monospace}
+
+/* ─── Matrix / Funnel ─────────────────────────────────────── */
+.matrix-grid{display:grid;gap:1px;background:var(--border);border-radius:var(--radius-xs);overflow:hidden;margin-top:12px}
+.matrix-cell{background:var(--white);padding:10px;font-size:11px;text-align:center}
+.matrix-cell.header{background:var(--bg);font-weight:700;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.matrix-cell.value{font-weight:700;font-family:monospace;font-size:13px}
+.matrix-cell.positive{color:var(--green);background:var(--green-light)}
+.matrix-cell.negative{color:var(--red);background:var(--red-light)}
+.matrix-cell.neutral{color:var(--slate)}
+
+.funnel-row{display:flex;align-items:center;gap:12px;margin:8px 0}
+.funnel-bar{height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;white-space:nowrap;padding:0 12px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.funnel-label{font-size:12px;font-weight:600;color:var(--text2);min-width:180px}
+.funnel-pct{font-size:11px;color:var(--text3);margin-left:auto;min-width:50px;text-align:right}
+
+/* ─── Stage Transition ──────────────────────────────────────── */
+.transition-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-xs);background:var(--bg);margin-bottom:8px;border:1px solid var(--border)}
+.transition-from{font-size:12px;font-weight:600;color:var(--text2);min-width:140px}
+.transition-arrow{color:var(--text3);font-size:14px}
+.transition-to{font-size:12px;font-weight:600;color:var(--blue);min-width:140px}
+.transition-count{font-size:13px;font-weight:700;font-family:monospace;color:var(--text);margin-left:auto}
+
+/* ─── Legend ────────────────────────────────────────────────── */
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.legend-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ─── Section Headers ───────────────────────────────────────── */
+.section-eyebrow{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+.section-headline{font-size:22px;font-weight:700;letter-spacing:-.4px;color:var(--text);margin-bottom:6px;font-family:var(--dm)}
+.section-sub{font-size:14px;color:var(--text2);margin-bottom:24px}
+.divider{height:1px;background:var(--border);margin:24px 0}
+
+/* ─── Tags ──────────────────────────────────────────────────── */
+.tag{display:inline-flex;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600}
+.tag-sold{background:var(--green-light);color:var(--green-dark)}
+.tag-spec{background:var(--blue-light);color:var(--blue-dark)}
+.tag-neg{background:var(--amber-light);color:var(--amber-dark)}
+.tag-enq{background:var(--purple-light);color:var(--purple-dark)}
+.tag-fut{background:var(--slate-light);color:var(--slate)}
+.tag-pend{background:var(--red-light);color:var(--red-dark)}
+.tag-comp{background:var(--green-light);color:var(--green-dark)}
+
+/* ─── NEW: Executive Insights Commentary ──────────────────── */
+.insight-commentary{background:var(--bg);border-radius:var(--radius-xs);padding:14px 16px;margin-top:12px;font-size:13px;color:var(--text2);line-height:1.6;border-left:3px solid var(--blue)}
+.insight-commentary strong{color:var(--text);font-weight:600}
+
+/* ─── NEW: Timeline Chart Styles ──────────────────────────── */
+.timeline-chart-wrap{position:relative;min-height:260px}
+
+/* ─── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--slate)}
+
+/* ─── Print Styles ────────────────────────────────────────────── */
+@media print{
+  .topbar,.nav-bar,.tb-actions,.search-box,.export-menu{display:none!important}
+  .dash-main{padding:12px;max-width:100%}
+  .panel{break-inside:avoid;box-shadow:none;border:1px solid #ddd}
+  body{background:#fff}
+  #app{display:flex!important}
+  .view{display:none!important}
+  .view.active{display:block!important}
+}
+
+/* ─── Responsive ────────────────────────────────────────────── */
+@media(max-width:1200px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.grid-2,.grid-3,.grid-32,.grid-23,.grid-4{grid-template-columns:1fr}.kpi-strip{grid-template-columns:repeat(2,1fr)}.proj-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.kpi-strip{grid-template-columns:1fr}.up-card-row{grid-template-columns:1fr}.proj-grid{grid-template-columns:1fr}.dash-main{padding:14px}}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     UPLOAD SCREEN
+     ════════════════════════════════════════════════════════════ -->
+<div id="uploadScreen">
+  <div class="up-brand">
+    <div class="up-brand-dot">PA</div>
+    <div class="up-brand-name">Project <span>Analytics</span></div>
+  </div>
+  <div class="up-headline">Executive Comparison Dashboard</div>
+  <div class="up-sub">Upload two monthly project reports (XLSX/CSV) to generate a dynamic comparative analytics dashboard with project-level insights</div>
+  <div class="up-card-row">
+    <div class="up-card" id="dropA" ondragover="Dashboard.onDragOver(event,'A')" ondragleave="Dashboard.onDragLeave('A')" ondrop="Dashboard.onDrop(event,'A')">
+      <input type="file" id="fileA" accept=".csv,.xlsx,.xls" onchange="Dashboard.handleFile('A',this)">
+      <div class="up-tag">Previous Month</div>
+      <div class="up-icon">📁</div>
+      <div class="up-cname">Base Report File</div>
+      <div class="up-chint">XLSX, CSV or Excel · drag & drop or click</div>
+      <div class="up-cfname" id="fnameA"></div>
+      <div class="up-meta" id="metaA"></div>
+      <div class="up-date-badge" id="dbadgeA"><span>📅</span><span id="datelabelA">—</span></div>
+    </div>
+    <div class="up-card" id="dropB" ondragover="Dashboard.onDragOver(event,'B')" ondragleave="Dashboard.onDragLeave('B')" ondrop="Dashboard.onDrop(event,'B')">
+      <input type="file" id="fileB" accept=".csv,.xlsx,.xls" onchange="Dashboard.handleFile('B',this)">
+      <div class="up-tag">Current Month</div>
+      <div class="up-icon">📂</div>
+      <div class="up-cname">Compare Report File</div>
+      <div class="up-chint">XLSX, CSV or Excel · drag & drop or click</div>
+      <div class="up-cfname" id="fnameB"></div>
+      <div class="up-meta" id="metaB"></div>
+      <div class="up-date-badge" id="dbadgeB"><span>📅</span><span id="datelabelB">—</span></div>
+    </div>
+  </div>
+  <div class="up-actions">
+    <button class="btn btn-primary" id="goBtn" onclick="Dashboard.openDashboard()" disabled>▶ Generate Dashboard</button>
+    <button class="btn btn-ghost" onclick="Dashboard.clearFiles()">Clear Files</button>
+  </div>
+  <div class="up-error" id="uploadError"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SHEET SELECTOR MODAL
+     ════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="sheetModal">
+  <div class="modal">
+    <div class="modal-title" id="sheetModalTitle">Select Worksheet</div>
+    <div class="modal-sub" id="sheetModalSub">Multiple sheets found. Choose the sheet containing project data.</div>
+    <div class="sheet-list" id="sheetList"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-ghost" onclick="Dashboard.closeSheetModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     DASHBOARD APP
+     ════════════════════════════════════════════════════════════ -->
+<div id="app">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="tb-brand">
+      <div class="tb-dot">PA</div>
+      <div class="tb-title">Executive Project Analytics</div>
+    </div>
+    <div class="tb-divider"></div>
+    <div class="file-dates">
+      <div class="date-chip date-chip-prev"><span class="date-chip-dot" style="background:#94a3b8"></span><span id="dateA">—</span></div>
+      <span style="color:var(--text3);font-size:12px">vs</span>
+      <div class="date-chip date-chip-curr"><span class="date-chip-dot" style="background:var(--blue)"></span><span id="dateB">—</span></div>
+    </div>
+    <div class="tb-spacer"></div>
+    <div class="tb-actions">
+      <div class="export-menu">
+        <button class="tb-btn" onclick="Dashboard.toggleExportMenu()">↓ Export</button>
+        <div class="export-dropdown" id="exportDropdown">
+          <div class="export-item" onclick="Dashboard.exportExcel()">📊 Export Summary Excel</div>
+          <div class="export-item" onclick="Dashboard.exportComparisonExcel()">📈 Export Comparison Report</div>
+          <div class="export-item" onclick="Dashboard.exportPDF()">🖨 Export Dashboard PDF</div>
+          <div class="export-item" onclick="Dashboard.exportExceptionsExcel()">⚠ Export Exceptions</div>
+        </div>
+      </div>
+      <button class="tb-btn" onclick="Dashboard.backToUpload()">↩ New Files</button>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-bar" id="navBar">
+    <div class="nav-btn active" onclick="Dashboard.showView('overview',this)">Overview</div>
+    <div class="nav-btn" onclick="Dashboard.showView('search',this)">🔍 Search</div>
+    <div class="nav-btn" onclick="Dashboard.showView('zonal',this)">🗺 Zonal</div>
+    <div class="nav-btn" onclick="Dashboard.showView('product',this)">📦 Product</div>
+    <div class="nav-btn" onclick="Dashboard.showView('productmix',this)">🧪 Product Mix</div>
+    <div class="nav-btn" onclick="Dashboard.showView('segment',this)">🏢 Segment</div>
+    <div class="nav-btn" onclick="Dashboard.showView('stage',this)">📊 Pipeline</div>
+    <div class="nav-btn" onclick="Dashboard.showView('orderval',this)">💰 Order Value</div>
+    <div class="nav-btn" onclick="Dashboard.showView('areawise',this)">📐 Area</div>
+    <div class="nav-btn" onclick="Dashboard.showView('status',this)">✅ Status</div>
+    <div class="nav-btn" onclick="Dashboard.showView('exceptions',this)">⚠ Exceptions</div>
+    <div class="nav-btn" onclick="Dashboard.showView('timeline',this)">📅 Timeline</div>
+  </div>
+
+  <div class="dash-main">
+
+    <!-- ════════════════════════════════════════════════════════
+         OVERVIEW VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-overview" class="view active">
+      <!-- NEW: Executive Alerts Panel -->
+      <div id="execAlerts" style="display:none"></div>
+
+      <div class="exec-summary">
+        <div class="exec-title">Executive Summary</div>
+        <div class="kpi-strip" id="kpiStrip"></div>
+      </div>
+
+      <!-- NEW: Executive Insights Commentary -->
+      <div class="panel grid-full" id="execInsightsPanel" style="display:none">
+        <div class="panel-hdr"><span class="panel-title">Executive Insights</span></div>
+        <div id="execInsightsContent"></div>
+      </div>
+
+      <div class="grid-32">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Revenue Trend</span><span class="panel-sub" id="revTrendSub">Monthly comparison</span></div>
+          <div class="chart-wrap" style="height:260px"><canvas id="cRevTrend"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Stage Distribution</span></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="cStageDonut"></canvas></div>
+          <div id="stageLegend" class="donut-stats"></div>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Zone Distribution</span></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="cZoneBar"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Product Distribution</span></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="cProdPie"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Segment Distribution</span></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="cSegPie"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Month-on-Month Comparison</span></div>
+          <div class="compare-row">
+            <div class="compare-block cb-prev">
+              <div class="compare-label" id="cmpLabel1">Previous</div>
+              <div class="compare-val" id="cmpVal1">—</div>
+              <div class="compare-detail" id="cmpProj1">—</div>
+            </div>
+            <div class="compare-arrow">→</div>
+            <div class="compare-block cb-curr">
+              <div class="compare-label" id="cmpLabel2">Current</div>
+              <div class="compare-val" id="cmpVal2">—</div>
+              <div class="compare-detail" id="cmpProj2">—</div>
+            </div>
+          </div>
+          <div id="insightRow" class="insight-row"></div>
+          <div class="panel-hdr" style="margin-top:8px;margin-bottom:12px"><span class="panel-title">Key Insights</span></div>
+          <div id="keyInsights" class="stat-bar-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Comparison Insights</span></div>
+          <div id="comparisonInsights" class="stat-bar-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+         SEARCH VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-search" class="view">
+      <div class="section-eyebrow">Project Search</div>
+      <div class="section-headline">Find Any Project</div>
+      <div class="section-sub">Search across both report files by project name, ID, city, architect, contractor, zone, segment, or stage</div>
+      <div class="search-box">
+        <input class="search-input" id="searchInput" placeholder="Type project name, ID, city, architect, zone, segment, stage…" oninput="Dashboard.debouncedSearch(this.value)" onkeydown="if(event.key==='Enter')Dashboard.doSearch(this.value)">
+        <button class="search-btn" onclick="Dashboard.doSearch(document.getElementById('searchInput').value)">Search</button>
+      </div>
+      <div id="searchResults"></div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+         ZONAL VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-zonal" class="view">
+      <div class="section-eyebrow">Geographic Distribution</div>
+      <div class="section-headline">Zone-wise Analysis</div>
+      <div class="section-sub">Project, revenue, area, and forecast distribution across zones</div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Projects by Zone</span></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="cZoneProj"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Revenue by Zone (₹L)</span></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="cZoneRev"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Area by Zone (sqm)</span></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="cZoneArea"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Zone Detail Summary</span></div>
+          <div id="zoneDetail" class="dist-grid"></div>
+        </div>
+      </div>
+      <div class="panel grid-full">
+        <div class="panel-hdr"><span class="panel-title">Zone vs Opportunity Stage</span></div>
+        <div class="chart-wrap" style="height:300px"><canvas id="cZoneStage"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+         PRODUCT VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-product" class="view">
+      <div class="section-eyebrow">Product Analysis</div>
+      <div class="section-headline">Product-wise Distribution</div>
+      <div class="section-sub">Breakdown by product category with project count, revenue, area, and forecast</div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Product Category Distribution</span></div>
+          <div class="chart-wrap" style="height:300px"><canvas id="cProdDist"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Product Revenue (₹L)</span></div>
+          <div class="chart-wrap" style="height:300px"><canvas id="cProdRev"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Product Area (sqm)</span></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="cProdArea"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Product Detail</span></div>
+          <div id="prodDetail" style="margin-top:6px"></div>
+        </div>
+      </div>
+      <div class="panel grid-full">
+        <div class="panel-hdr"><span class="panel-title">Product Mix — Previous vs Current</span></div>
+        <div class="chart-wrap" style="height:280px"><canvas id="cProdCompare"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+         NEW: PRODUCT MIX VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-productmix" class="view">
+      <div class="section-eyebrow">Product Mix Analytics</div>
+      <div class="section-headline">Product Mix Deep Dive</div>
+      <div class="section-sub">Group by Product Type, Application, and Specification with top products by revenue, area, and project count</div>
+      <div class="grid-3">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Top Products by Revenue</span></div>
+          <div class="chart-wrap" style="height:300px"><canvas id="cMixRev"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Top Products by Area</span></div>
+          <div class="chart-wrap" style="height:300px"><canvas id="cMixArea"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Top Products by Count</span></div>
+          <div class="chart-wrap" style="height:300px"><canvas id="cMixCount"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Product Mix Comparison</span></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="cMixCompare"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Product Mix Metrics</span></div>
+          <div id="mixMetrics" style="margin-top:6px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+         SEGMENT VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-segment" class="view">
+      <div class="section-eyebrow">Segment Analysis</div>
+      <div class="section-headline">Segment-wise Distribution</div>
+      <div class="section-sub">Commercial, Residential, Industrial, Hospitality, AMTR, Retail, Healthcare and other segments</div>
+      <div class="grid-3">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Projects by Segment</span></div>
+          <div class="chart-wrap" style="height:260px"><canvas id="cSegProj"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Revenue by Segment (₹L)</span></div>
+          <div class="chart-wrap" style="height:260px"><canvas id="cSegRev"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Area by Segment (sqm)</span></div>
+          <div class="chart-wrap" style="height:260px"><canvas id="cSegArea"></canvas></div>
+        </div>
+      </div>
+      <div class="panel grid-full">
+        <div class="panel-hdr"><span class="panel-title">Segment Detail</span></div>
+        <div id="segDetail"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+         STAGE / PIPELINE VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-stage" class="view">
+      <div class="section-eyebrow">Pipeline Health</div>
+      <div class="section-headline">Opportunity Stage Analysis</div>
+      <div class="section-sub">Stage distribution, funnel analysis, and stage transition tracking</div>
+      <div class="grid-32">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Stage Distribution</span></div>
+          <div class="chart-wrap" style="height:300px"><canvas id="cStageDist"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Stage Funnel</span></div>
+          <div id="stageFunnel" style="margin-top:8px"></div>
+        </div>
+      </div>
+      <div class="panel grid-full">
+        <div class="panel-hdr"><span class="panel-title">Stage Transition Matrix</span><span class="panel-sub">Projects moving between stages from Previous to Current</span></div>
+        <div id="stageMatrix" style="margin-top:12px;overflow-x:auto"></div>
+      </div>
+      <div class="panel grid-full">
+        <div class="panel-hdr"><span class="panel-title">Stage Transition Details</span></div>
+        <div id="stageTransitions"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+         ORDER VALUE VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-orderval" class="view">
+      <div class="section-eyebrow">Value Analysis</div>
+      <div class="section-headline">Order Value Distribution</div>
+      <div class="section-sub">Project value bands: 0-5L, 5L-25L, 25L-1Cr, 1Cr-5Cr, 5Cr+</div>
+      <div id="revUnavailableOrderval" style="display:none"></div>
+      <div class="grid-2" id="ordervalCharts">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Value Band — Project Count</span></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="cValCount"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Value Band — Revenue (₹L)</span></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="cValRev"></canvas></div>
+        </div>
+      </div>
+      <div class="panel grid-full" id="ordervalDetailPanel">
+        <div class="panel-hdr"><span class="panel-title">Value Band Detail</span></div>
+        <div id="valDetail"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+         AREA VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-areawise" class="view">
+      <div class="section-eyebrow">Area Analysis</div>
+      <div class="section-headline">Area Estimate Distribution</div>
+      <div class="section-sub">Project scale bands: 0-500, 500-1000, 1000-2000, 2000-5000, 5000-10000, 10000+ sqm</div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Area Band — Project Count</span></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="cAreaCount"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Area Band — Revenue (₹L)</span></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="cAreaRev"></canvas></div>
+        </div>
+      </div>
+      <div class="panel grid-full">
+        <div class="panel-hdr"><span class="panel-title">Area Band Detail</span></div>
+        <div id="areaDetail"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+         STATUS VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-status" class="view">
+      <div class="section-eyebrow">Status Overview</div>
+      <div class="section-headline">Approval & Status Distribution</div>
+      <div class="section-sub">Project status breakdown with percentages and counts</div>
+      <div class="grid-3">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Status Distribution</span></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="cStatusDist"></canvas></div>
+          <div id="statusLegend" class="legend" style="margin-top:12px;justify-content:center"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Status — Previous vs Current</span></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="cStatusCompare"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Status Change Summary</span></div>
+          <div id="statusChangeSummary" style="margin-top:6px"></div>
+        </div>
+      </div>
+      <div class="panel grid-full">
+        <div class="panel-hdr"><span class="panel-title">Status Detail</span></div>
+        <div id="statusDetail"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+         NEW: DATA EXCEPTIONS VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-exceptions" class="view">
+      <div class="section-eyebrow">Data Quality</div>
+      <div class="section-headline">Data Exceptions</div>
+      <div class="section-sub">Identify incomplete records across both report files</div>
+      <div class="grid-3" id="exceptionCards"></div>
+      <div class="panel grid-full">
+        <div class="panel-hdr">
+          <span class="panel-title">Exception Records</span>
+          <div class="search-filters" id="exceptionFilters">
+            <span class="filter-chip active" onclick="Dashboard.filterExceptions('all')">All</span>
+            <span class="filter-chip" onclick="Dashboard.filterExceptions('revenue')">Missing Revenue</span>
+            <span class="filter-chip" onclick="Dashboard.filterExceptions('area')">Missing Area</span>
+            <span class="filter-chip" onclick="Dashboard.filterExceptions('forecast')">Missing Forecast</span>
+            <span class="filter-chip" onclick="Dashboard.filterExceptions('stage')">Missing Stage</span>
+          </div>
+        </div>
+        <div id="exceptionsTable"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════
+         NEW: TIMELINE ANALYTICS VIEW
+         ════════════════════════════════════════════════════════ -->
+    <div id="view-timeline" class="view">
+      <div class="section-eyebrow">Timeline Analytics</div>
+      <div class="section-headline">Project Lifecycle Trends</div>
+      <div class="section-sub">Projects created, closed, won, and lost per month with forecast trends</div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Projects Created Per Month</span></div>
+          <div class="timeline-chart-wrap"><canvas id="cTimelineCreated"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Projects Closed Per Month</span></div>
+          <div class="timeline-chart-wrap"><canvas id="cTimelineClosed"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Projects Won Per Month</span></div>
+          <div class="timeline-chart-wrap"><canvas id="cTimelineWon"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><span class="panel-title">Projects Lost Per Month</span></div>
+          <div class="timeline-chart-wrap"><canvas id="cTimelineLost"></canvas></div>
+        </div>
+      </div>
+      <div class="panel grid-full">
+        <div class="panel-hdr"><span class="panel-title">Forecast Trend</span></div>
+        <div class="timeline-chart-wrap"><canvas id="cTimelineForecast"></canvas></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   EXECUTIVE PROJECT ANALYTICS DASHBOARD
+   Fully dynamic — no hardcoded data
+   ═══════════════════════════════════════════════════════════════ */
+
+const Dashboard = (function() {
+  /* ─── State ───────────────────────────────────────────────── */
+  let fileA = null, fileB = null;
+  let rawA = null, rawB = null;
+  let dataA = { projects: [], summary: {}, filename: '', date: null, sheetName: '', indexes: null };
+  let dataB = { projects: [], summary: {}, filename: '', date: null, sheetName: '', indexes: null };
+  let comparison = null;
+  let allProjects = [];
+  let chartInstances = {};
+  let pendingFileId = null;
+  let searchDebounceTimer = null;
+  let exceptionsData = null;
+  let execInsights = null;
+  let hasRevenueData = false;
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const COMPLETED_STAGES = ['completed','closed','sold','won','done','finished'];
+  const DATE_KEYWORDS = ['report date','as on date','snapshot date','month ending','current date','data as of','as of date','reporting date','period end','cutoff date'];
+
+  /* ─── Enhanced Header Mapping Engine ──────────────────────── */
+  const HEADER_MAP = {
+    projectName: ['project name','project_name','name','project','project title','title','projectname','project name','opportunity name','deal name','project desc','description','opportunity name','opportunity','opp name','deal name','customer project','project_name','opp_name','deal_name','customer_project','project title','project_title','project description','project_description','project name','projectname','opportunity_name','opportunityname','dealname','customerproject'],
+    projectId: ['project id','project_id','id','opportunity id','opportunity_id','project code','code','project number','opportunity number','deal id','projectid','opportunityid','serial number','sno','sr no','opp id','opportunity id','deal id','reference number','ref no','reference_no','ref_no','refno','opp_id','opportunity_id','deal_id','reference_number','project_code','project_id','projectid','opportunityid','dealid','serial_number','sno','sr_no','srno','project number','projectnumber','opportunity number','opportunitynumber','deal number','dealnumber'],
+    zone: ['zone','region','territory','geography','area zone','regional zone','sales zone','zone name','region name','region name','territory','sales territory','salesterritory','region_name','zone_name','territory_name','territoryname','sales_territory','salesterritory','geography','geography name','geographyname','geo','geo name','geoname','area zone','areazone','regional zone','regionalzone','sales zone','saleszone'],
+    city: ['city','location','town','project city','site city','site location','project location','address','site address'],
+    state: ['state','province','region state'],
+    country: ['country','nation'],
+    value: ['value','order value','project value','amount','contract value','total value','order amount','project amount','revenue','total revenue','deal value','opportunity value','estimated value','expected value','value inr','value rs','value (inr)','value (rs)','contract amount','sales value','project value inr','order amount','revenue amount','sales_amount','contract_amount','project_value','order_value','deal_value','opportunity_value','estimated_value','expected_value','projectvalue','ordervalue','dealvalue','opportunityvalue','estimatedvalue','expectedvalue','project value inr','projectvalueinr','project_value_inr','revenue inr','revenueinr','revenue_inr','sales value inr','salesvalueinr','sales_value_inr','contract value inr','contractvalueinr','contract_value_inr'],
+    area: ['area','area estimate','sqm','square meter','sq m','square meters','total area','project area','built up area','bua','carpet area','builtup area','area sqm','area (sqm)','area in sqm','sqm','area sqm','areasqm','area_sqm','square_meter','square meter','squaremeter','built up area','builtuparea','built_up_area','builtup_area','carpet area','carpetarea','carpet_area','total area','totalarea','total_area','project area','projectarea','project_area','area estimate','areaestimate','area_estimate'],
+    stage: ['stage','opportunity stage','pipeline stage','project stage','current stage','sales stage','deal stage','opportunityStage','project_stage','current_stage','pipeline stage','pipelinestage','pipeline_stage','sales stage','salesstage','sales_stage','deal stage','dealstage','deal_stage','opportunity stage','opportunitystage','opportunity_stage','project stage','projectstage','project_stage','current stage','currentstage','current_stage','salesstage','dealstage','opportunitystage','projectstage','currentstage','pipelinestage'],
+    status: ['status','approval status','project status','current status','specification status','deal status','opportunity status','project_status','approval_status'],
+    segment: ['segment','project segment','industry segment','market segment','business segment','vertical','industry','project segment','segment name'],
+    segmentCluster: ['segment cluster','cluster','segment_cluster','cluster name','segmentcluster','business cluster','market cluster'],
+    product: ['product','product type','product category','application','product application','product mix','product name','product_type','producttype','application type','product category','product category','productcategory','product_category','system','offering','solution','product category','productcategory','product_category','system','system_type','systemtype','offering','offering_type','offeringtype','solution','solution_type','solutiontype','product type','producttype','product_type','application','application_type','applicationtype'],
+    architect: ['architect','architect name','project architect','design architect','architect firm','architect company','architect_name'],
+    contractor: ['contractor','contractor name','general contractor','gc','builder','contractor firm','contractor company','contractor_name'],
+    channelPartner: ['channel partner','cp','partner','dealer','distributor','channel_partner','channelpartner','sales partner'],
+    forecast2026: ['fc 2026','fy 2026','forecast 2026','fy26','forecast fy26','2026 forecast','fc2026','fy2026','forecast2026','fc_2026','fy_2026','forecast value','forecastvalue','forecast_value','billing forecast','billingforecast','billing_forecast','planned billing','plannedbilling','planned_billing','forecast 2026','forecast2026','forecast_2026','fy 2026','fy2026','fy_2026','fc 2026','fc2026','fc_2026'],
+    forecast2027: ['fc 2027','fy 2027','forecast 2027','fy27','forecast fy27','2027 forecast','fc2027','fy2027','forecast2027','fc_2027','fy_2027','forecast value','forecastvalue','forecast_value','billing forecast','billingforecast','billing_forecast','planned billing','plannedbilling','planned_billing','forecast 2027','forecast2027','forecast_2027','fy 2027','fy2027','fy_2027','fc 2027','fc2027','fc_2027'],
+    deliveryDate: ['delivery','delivery date','expected delivery','project delivery','completion date','expected completion','project completion','delivery_date','deliverydate'],
+    closeDate: ['close','close date','expected close','closure date','project close','expected closure','close_date','closedate','expected_close_date'],
+    specification: ['specification','spec strength','specification strength','spec status','spec','specification strength','specification_status','specificationstatus'],
+    probability: ['probability','win probability','deal probability','success probability','likelihood','confidence'],
+    projectType: ['project type','type','project_type','projecttype','project kind','project category','type of project'],
+    poc: ['poc','point of contact','contact person','contact','project contact','client contact'],
+    createdBy: ['created by','created_by','createdby','user','owner','sales owner','deal owner','project owner'],
+    createdDate: ['created','created date','created_date','createdate','date created','project created','entry date'],
+    updatedDate: ['updated','updated date','updated_date','updatedate','date updated','last modified','modified date'],
+    fp: ['fp','fa','fixed price','fixed amount'],
+    slp: ['slp','sla','sun louver price','sun louver amount'],
+    nbk: ['nbk','nbka','nbk price','nbk amount'],
+    cpArea: ['cp area','cp_area','cparea','channel partner area','partner area']
+  };
+
+  const SOLD_KEYWORDS = ['sold','won','closed','completed','done','finished','booked','confirmed'];
+  const CLOSED_KEYWORDS = ['completed','closed','done','finished'];
+  const STAGE_ORDER = ['future','enquiry','specified','negotiation','sold','completed','closed'];
+
+  /* ─── Utilities ───────────────────────────────────────────── */
+  function normalizeHeader(h) {
+    if (!h) return '';
+    return String(h).toLowerCase().replace(/[_\-\s\.]+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  function findHeaderMapping(headers) {
+    const map = {};
+    const normalizedHeaders = headers.map((h, idx) => ({ raw: h, norm: normalizeHeader(h), idx }));
+
+    for (const [field, aliases] of Object.entries(HEADER_MAP)) {
+      for (const alias of aliases) {
+        const normAlias = normalizeHeader(alias);
+        const match = normalizedHeaders.find(h => {
+          const hn = h.norm;
+          // Exact match
+          if (hn === normAlias) return true;
+          // Contains match (for longer headers containing the alias)
+          if (hn.includes(normAlias) && normAlias.length > 3) return true;
+          // Alias contains header (for short headers)
+          if (normAlias.includes(hn) && hn.length > 3) return true;
+          // Fuzzy: check if they share significant words
+          const hWords = hn.split(' ').filter(w => w.length > 2);
+          const aWords = normAlias.split(' ').filter(w => w.length > 2);
+          const shared = hWords.filter(w => aWords.includes(w));
+          if (shared.length >= Math.min(hWords.length, aWords.length) * 0.5 && shared.length > 0) return true;
+          return false;
+        });
+        if (match) {
+          map[field] = match.idx;
+          break;
+        }
+      }
+    }
+    return map;
+  }
+
+  function parseNumber(val) {
+    if (val === null || val === undefined || val === '') return 0;
+    if (typeof val === 'number') return val;
+    const cleaned = String(val).replace(/[₹,\s\-\(\)]/g, '').replace(/\+/g, '');
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+  }
+
+  function parseDate(val) {
+    if (!val) return null;
+    if (val instanceof Date) return isNaN(val) ? null : val;
+    const str = String(val).trim();
+    const patterns = [
+      /(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{4})/,
+      /(\d{4})[-\/\.](\d{1,2})[-\/\.](\d{1,2})/,
+      /(\d{1,2})[-\s]([A-Za-z]{3,})[-\s](\d{4})/,
+      /([A-Za-z]{3,})[-\s](\d{1,2})[,\s]+(\d{4})/,
+      /(\d{1,2})[-\s]([A-Za-z]{3,})[,\s]*(\d{4})/
+    ];
+    for (const p of patterns) {
+      const m = str.match(p);
+      if (m) {
+        const d = new Date(str);
+        if (!isNaN(d)) return d;
+      }
+    }
+    const d = new Date(str);
+    return isNaN(d) ? null : d;
+  }
+
+  function formatCurrency(val) {
+    if (val >= 10000000) return '₹' + (val / 10000000).toFixed(2) + 'Cr';
+    if (val >= 100000) return '₹' + (val / 100000).toFixed(2) + 'L';
+    if (val >= 1000) return '₹' + (val / 1000).toFixed(1) + 'K';
+    return '₹' + val.toFixed(0);
+  }
+
+  function formatNumber(val) {
+    return val.toLocaleString('en-IN');
+  }
+
+  function formatDate(date) {
+    if (!date) return '—';
+    const d = new Date(date);
+    if (isNaN(d)) return '—';
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  function formatDateDisplay(date) {
+    if (!date) return '—';
+    const d = new Date(date);
+    if (isNaN(d)) return '—';
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  /* ─── FEATURE 1: Advanced Report Date Detection ───────────── */
+  function detectReportDate(workbook, sheet, headers, rows, filename, sheetName) {
+    // Priority 1: Sheet Content - scan first 15 rows, first 20 columns
+    for (let i = 0; i < Math.min(15, rows.length); i++) {
+      const row = rows[i];
+      for (let j = 0; j < Math.min(20, row.length); j++) {
+        const val = row[j];
+        if (!val) continue;
+        const str = String(val).toLowerCase();
+        // Check for date keywords in adjacent cells
+        for (const kw of DATE_KEYWORDS) {
+          if (str.includes(kw)) {
+            // Look for date value in same row or next cell
+            for (let k = j + 1; k < Math.min(j + 3, row.length); k++) {
+              const d = parseDate(row[k]);
+              if (d && d.getFullYear() > 2000 && d.getFullYear() < 2050) return d;
+            }
+          }
+        }
+        // Try parsing the value itself as a date
+        const d = parseDate(val);
+        if (d && d.getFullYear() > 2000 && d.getFullYear() < 2050) {
+          // Check if it's not just a number that happens to parse as a date
+          if (typeof val !== 'number' || val > 30000) return d;
+        }
+      }
+    }
+
+    // Priority 2: Worksheet Name
+    if (sheetName) {
+      const sn = sheetName.toLowerCase();
+      const monthPatterns = [
+        /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*(\d{4})/i,
+        /(\d{1,2})[-\s](jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[-\s]*(\d{4})/i,
+        /(\d{4})[-\s](jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i
+      ];
+      for (const p of monthPatterns) {
+        const m = sn.match(p);
+        if (m) {
+          const d = new Date(sheetName.replace(/[_]/g, ' '));
+          if (!isNaN(d) && d.getFullYear() > 2000) return d;
+        }
+      }
+    }
+
+    // Priority 3: Filename
+    if (filename) {
+      const fn = filename.toLowerCase().replace(/\.[^.]+$/, '');
+      const patterns = [
+        /(\d{1,2})[-_\/](\d{1,2})[-_\/](\d{4})/,
+        /(\d{4})[-_\/](\d{1,2})[-_\/](\d{1,2})/,
+        /(\d{1,2})[-_\s]([a-z]{3,})[-_\s](\d{4})/i,
+        /([a-z]{3,})[-_\s](\d{4})/i,
+        /(\d{4})(\d{2})(\d{2})/,
+        /(\d{4})[-_\s](\d{2})/
+      ];
+      for (const p of patterns) {
+        const m = fn.match(p);
+        if (m) {
+          const d = new Date(fn.replace(/[_]/g, '-'));
+          if (!isNaN(d) && d.getFullYear() > 2000 && d.getFullYear() < 2050) return d;
+        }
+      }
+    }
+
+    // Priority 4: File Metadata
+    if (workbook.Props && workbook.Props.ModifiedDate) {
+      const d = new Date(workbook.Props.ModifiedDate);
+      if (!isNaN(d) && d.getFullYear() > 2000) return d;
+    }
+    if (workbook.Props && workbook.Props.CreatedDate) {
+      const d = new Date(workbook.Props.CreatedDate);
+      if (!isNaN(d) && d.getFullYear() > 2000) return d;
+    }
+
+    return null;
+  }
+
+  function deriveProductType(app, productType) {
+    if (productType) return String(productType).trim();
+    const a = String(app || '').toLowerCase();
+    if (a.includes('ceiling') || a.includes('baffle') || a.includes('tile') || a.includes('layin') || a.includes('hookon') || a.includes('cell') || a.includes('plank') || a.includes('acoustic')) return 'Ceilings';
+    if (a.includes('facade') || a.includes('exterior') || a.includes('skin') || a.includes('jali') || a.includes('cladding') || a.includes('screen') || a.includes('wall')) return 'Facade';
+    if (a.includes('louver') || a.includes('sun') || a.includes('shutter') || a.includes('shade') || a.includes('blind')) return 'Sun Louvers';
+    if (a.includes('nbk') || a.includes('terracotta') || a.includes('brick')) return 'NBK';
+    if (a.includes('interior') || a.includes('indoor')) return 'Interior';
+    if (a.includes('exterior') || a.includes('outdoor')) return 'Exterior';
+    return app ? String(app).trim() : 'Other';
+  }
+
+  function isSold(stage, status) {
+    const s = String(stage || '').toLowerCase();
+    const st = String(status || '').toLowerCase();
+    return SOLD_KEYWORDS.some(k => s.includes(k) || st.includes(k));
+  }
+
+  function isCompleted(stage, status) {
+    const s = String(stage || '').toLowerCase();
+    const st = String(status || '').toLowerCase();
+    return CLOSED_KEYWORDS.some(k => s.includes(k) || st.includes(k));
+  }
+
+  /* ─── FEATURE 7: Performance Optimization — buildIndexes ──── */
+  function buildIndexes(projects) {
+    const projectById = new Map();
+    const zoneIndex = new Map();
+    const segmentIndex = new Map();
+    const productIndex = new Map();
+    const stageIndex = new Map();
+    const statusIndex = new Map();
+
+    for (const p of projects) {
+      const key = String(p.projectId || p.projectName).toLowerCase();
+      projectById.set(key, p);
+
+      const addToIndex = (index, val) => {
+        if (!val) return;
+        const v = String(val).toLowerCase();
+        if (!index.has(v)) index.set(v, new Set());
+        index.get(v).add(key);
+      };
+
+      addToIndex(zoneIndex, p.zone);
+      addToIndex(segmentIndex, p.segment);
+      addToIndex(productIndex, p.product);
+      addToIndex(stageIndex, p.stage);
+      addToIndex(statusIndex, p.status);
+    }
+
+    return { projectById, zoneIndex, segmentIndex, productIndex, stageIndex, statusIndex };
+  }
+
+  /* ─── File Parsing ────────────────────────────────────────── */
+  async function parseFile(file, id) {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+
+    if (!workbook.SheetNames.length) throw new Error('No sheets found in file');
+
+    let sheetName = workbook.SheetNames[0];
+    let sheet = workbook.Sheets[sheetName];
+    let json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+    if (workbook.SheetNames.length > 1) {
+      const result = await showSheetSelector(workbook, workbook.SheetNames, id);
+      sheetName = result;
+      sheet = workbook.Sheets[sheetName];
+      json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+    }
+
+    if (!json.length) throw new Error('Selected sheet is empty');
+
+    const headers = json[0].map(h => String(h || '').trim());
+    const headerMap = findHeaderMapping(headers);
+
+    const required = ['projectId', 'projectName'];
+    const missing = required.filter(r => headerMap[r] === undefined);
+    if (missing.length) {
+      const hasId = headers.some(h => /id|code|number|sno|ref/i.test(h));
+      const hasName = headers.some(h => /name|project|title|description|opportunity|deal/i.test(h));
+      if (!hasId || !hasName) {
+        throw new Error('Required columns missing: ' + missing.join(', ') + '. Available: ' + headers.join(', '));
+      }
+    }
+
+    const projects = [];
+    for (let i = 1; i < json.length; i++) {
+      const row = json[i];
+      if (!row || !row.some(c => c !== '' && c !== undefined && c !== null)) continue;
+
+      const p = {};
+      for (const [field, idx] of Object.entries(headerMap)) {
+        if (idx === undefined) continue;
+        const val = row[idx];
+        if (val === '' || val === undefined || val === null) continue;
+
+        switch (field) {
+          case 'value':
+          case 'area':
+          case 'forecast2026':
+          case 'forecast2027':
+          case 'fp':
+          case 'slp':
+          case 'nbk':
+          case 'cpArea':
+            p[field] = parseNumber(val);
+            break;
+          case 'deliveryDate':
+          case 'closeDate':
+          case 'createdDate':
+          case 'updatedDate':
+            p[field] = parseDate(val);
+            break;
+          default:
+            p[field] = String(val).trim();
+        }
+      }
+
+      // Fallback mappings
+      if (!p.projectId) {
+        const idIdx = headers.findIndex(h => /id|code|number|sno|ref/i.test(h));
+        if (idIdx >= 0) p.projectId = String(row[idIdx] || '').trim();
+      }
+      if (!p.projectName) {
+        const nameIdx = headers.findIndex(h => /name|project|title|description|opportunity|deal/i.test(h));
+        if (nameIdx >= 0) p.projectName = String(row[nameIdx] || '').trim();
+      }
+      if (!p.value) {
+        const valIdx = headers.findIndex(h => /value|amount|revenue|price|cost|contract|sales/i.test(h));
+        if (valIdx >= 0) p.value = parseNumber(row[valIdx]);
+      }
+      if (!p.area) {
+        const areaIdx = headers.findIndex(h => /area|sqm|square/i.test(h));
+        if (areaIdx >= 0) p.area = parseNumber(row[areaIdx]);
+      }
+      if (!p.stage) {
+        const stageIdx = headers.findIndex(h => /stage|status|phase|pipeline/i.test(h));
+        if (stageIdx >= 0) p.stage = String(row[stageIdx] || '').trim();
+      }
+      if (!p.status) {
+        const statusIdx = headers.findIndex(h => /status|approval|state/i.test(h));
+        if (statusIdx >= 0) p.status = String(row[statusIdx] || '').trim();
+      }
+      if (!p.zone) {
+        const zoneIdx = headers.findIndex(h => /zone|region|territory|geography/i.test(h));
+        if (zoneIdx >= 0) p.zone = String(row[zoneIdx] || '').trim();
+      }
+      if (!p.segment) {
+        const segIdx = headers.findIndex(h => /segment|vertical|industry|market/i.test(h));
+        if (segIdx >= 0) p.segment = String(row[segIdx] || '').trim();
+      }
+      if (!p.product) {
+        const prodIdx = headers.findIndex(h => /product|application|category|type|system|offering|solution/i.test(h));
+        if (prodIdx >= 0) p.product = String(row[prodIdx] || '').trim();
+      }
+      if (!p.city) {
+        const cityIdx = headers.findIndex(h => /city|location|town/i.test(h));
+        if (cityIdx >= 0) p.city = String(row[cityIdx] || '').trim();
+      }
+
+      if (p.projectId || p.projectName) {
+        p.product = deriveProductType(p.product, p.product);
+        p._sold = isSold(p.stage, p.status);
+        p._completed = isCompleted(p.stage, p.status);
+        projects.push(p);
+      }
+    }
+
+    if (!projects.length) throw new Error('No valid project data found in sheet');
+
+    const date = detectReportDate(workbook, sheet, headers, json, file.name, sheetName) || new Date();
+    const summary = buildSummary(projects);
+    const indexes = buildIndexes(projects);
+
+    return { projects, summary, filename: file.name, date, sheetName, headerMap, indexes };
+  }
+
+  function showSheetSelector(workbook, sheetNames, fileId) {
+    return new Promise((resolve, reject) => {
+      pendingFileId = fileId;
+      const modal = document.getElementById('sheetModal');
+      const list = document.getElementById('sheetList');
+      const title = document.getElementById('sheetModalTitle');
+      const sub = document.getElementById('sheetModalSub');
+
+      title.textContent = fileId === 'A' ? 'Select Previous Month Sheet' : 'Select Current Month Sheet';
+      sub.textContent = `${sheetNames.length} sheets found. Choose the one containing project data.`;
+
+      list.innerHTML = sheetNames.map((name, i) => {
+        const sheet = workbook.Sheets[name];
+        const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+        const rows = range.e.r - range.s.r + 1;
+        const cols = range.e.c - range.s.c + 1;
+        return `<div class="sheet-option" onclick="Dashboard.selectSheet('${name}')">
+          <div><div class="sheet-name">${name}</div><div class="sheet-info">${rows} rows × ${cols} columns</div></div>
+          <div class="sheet-dim">Sheet ${i + 1}</div>
+        </div>`;
+      }).join('');
+
+      modal.classList.add('active');
+      window._sheetResolve = resolve;
+      window._sheetReject = reject;
+    });
+  }
+
+  function selectSheet(name) {
+    document.getElementById('sheetModal').classList.remove('active');
+    if (window._sheetResolve) window._sheetResolve(name);
+  }
+
+  function closeSheetModal() {
+    document.getElementById('sheetModal').classList.remove('active');
+    if (window._sheetReject) window._sheetReject(new Error('Sheet selection cancelled'));
+  }
+
+  /* ─── Summary Builder ─────────────────────────────────────── */
+  function buildSummary(projects) {
+    const s = {
+      totalProjects: projects.length,
+      totalValue: 0, totalArea: 0,
+      forecast2026: 0, forecast2027: 0,
+      soldCount: 0, soldValue: 0,
+      completedCount: 0,
+      zone: {}, stage: {}, segment: {}, segmentCluster: {},
+      product: {}, status: {}, projectType: {},
+      city: {}, architect: {}, contractor: {},
+      valueBuckets: { '0-5L':0, '5L-25L':0, '25L-1Cr':0, '1Cr-5Cr':0, '5Cr+':0 },
+      areaBuckets: { '0-500':0, '500-1000':0, '1000-2000':0, '2000-5000':0, '5000-10000':0, '10000+':0 },
+      monthly: {},
+      maxValue: 0, maxArea: 0
+    };
+
+    projects.forEach(p => {
+      s.totalValue += p.value || 0;
+      s.totalArea += p.area || 0;
+      s.forecast2026 += p.forecast2026 || 0;
+      s.forecast2027 += p.forecast2027 || 0;
+
+      if (p._sold) { s.soldCount++; s.soldValue += p.value || 0; }
+      if (p._completed) s.completedCount++;
+
+      if (p.value > s.maxValue) s.maxValue = p.value;
+      if (p.area > s.maxArea) s.maxArea = p.area;
+
+      countKey(s.zone, p.zone);
+      countKey(s.stage, p.stage);
+      countKey(s.segment, p.segment);
+      countKey(s.segmentCluster, p.segmentCluster);
+      countKey(s.product, p.product);
+      countKey(s.status, p.status);
+      countKey(s.projectType, p.projectType);
+      countKey(s.city, p.city);
+      countKey(s.architect, p.architect);
+      countKey(s.contractor, p.contractor);
+
+      const v = p.value || 0;
+      if (v < 500000) s.valueBuckets['0-5L']++;
+      else if (v < 2500000) s.valueBuckets['5L-25L']++;
+      else if (v < 10000000) s.valueBuckets['25L-1Cr']++;
+      else if (v < 50000000) s.valueBuckets['1Cr-5Cr']++;
+      else s.valueBuckets['5Cr+']++;
+
+      const a = p.area || 0;
+      if (a < 500) s.areaBuckets['0-500']++;
+      else if (a < 1000) s.areaBuckets['500-1000']++;
+      else if (a < 2000) s.areaBuckets['1000-2000']++;
+      else if (a < 5000) s.areaBuckets['2000-5000']++;
+      else if (a < 10000) s.areaBuckets['5000-10000']++;
+      else s.areaBuckets['10000+']++;
+
+      const del = p.deliveryDate || p.closeDate;
+      if (del) {
+        const d = new Date(del);
+        if (!isNaN(d)) {
+          const m = MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+          s.monthly[m] = (s.monthly[m] || 0) + (p.value || 0);
+        }
+      }
+    });
+
+    return s;
+  }
+
+  function countKey(obj, key) {
+    if (!key) return;
+    obj[key] = (obj[key] || 0) + 1;
+  }
+
+  /* ─── Comparison Engine ───────────────────────────────────── */
+  function buildComparison() {
+    const mapA = dataA.indexes ? dataA.indexes.projectById : new Map(dataA.projects.map(p => [String(p.projectId || p.projectName).toLowerCase(), p]));
+    const mapB = dataB.indexes ? dataB.indexes.projectById : new Map(dataB.projects.map(p => [String(p.projectId || p.projectName).toLowerCase(), p]));
+
+    const newProjects = [];
+    const removedProjects = [];
+    const commonProjects = [];
+    const stageChanges = [];
+    const completedProjects = [];
+    const statusChanges = [];
+    const backwardStages = [];
+    const stalledProjects = [];
+
+    let revenueGrowth = 0;
+    let revenueLoss = 0;
+
+    for (const p of dataB.projects) {
+      const key = String(p.projectId || p.projectName).toLowerCase();
+      if (!mapA.has(key)) {
+        newProjects.push(p);
+        revenueGrowth += p.value || 0;
+      }
+    }
+
+    for (const p of dataA.projects) {
+      const key = String(p.projectId || p.projectName).toLowerCase();
+      if (!mapB.has(key)) {
+        removedProjects.push(p);
+        revenueLoss += p.value || 0;
+      }
+    }
+
+    for (const pB of dataB.projects) {
+      const key = String(pB.projectId || pB.projectName).toLowerCase();
+      const pA = mapA.get(key);
+      if (pA) {
+        commonProjects.push({ prev: pA, curr: pB });
+
+        const valDiff = (pB.value || 0) - (pA.value || 0);
+        if (valDiff > 0) revenueGrowth += valDiff;
+        else if (valDiff < 0) revenueLoss += Math.abs(valDiff);
+
+        if (pA.stage !== pB.stage) {
+          stageChanges.push({ prev: pA, curr: pB, from: pA.stage, to: pB.stage });
+          // Detect backward stage movement
+          if (isBackwardStage(pB.stage, pA.stage)) {
+            backwardStages.push({ prev: pA, curr: pB, from: pA.stage, to: pB.stage });
+          }
+        }
+        if (pA.status !== pB.status) {
+          statusChanges.push({ prev: pA, curr: pB, from: pA.status, to: pB.status });
+        }
+        if (!pA._completed && pB._completed) {
+          completedProjects.push(pB);
+        }
+        // Detect stalled projects (same stage for both months, in negotiation)
+        if (pA.stage === pB.stage && pB.stage && pB.stage.toLowerCase().includes('negotiation')) {
+          stalledProjects.push(pB);
+        }
+      }
+    }
+
+    const sA = dataA.summary;
+    const sB = dataB.summary;
+    const netGrowth = sB.totalValue - sA.totalValue;
+    const netGrowthPct = sA.totalValue ? (netGrowth / sA.totalValue * 100) : 0;
+    const pipelineGrowth = (sB.totalValue - sB.soldValue) - (sA.totalValue - sA.soldValue);
+    const pipelineGrowthPct = (sA.totalValue - sA.soldValue) ? (pipelineGrowth / (sA.totalValue - sA.soldValue) * 100) : 0;
+    const areaGrowth = sB.totalArea - sA.totalArea;
+    const areaGrowthPct = sA.totalArea ? (areaGrowth / sA.totalArea * 100) : 0;
+
+    const stageMatrix = {};
+    const allStages = new Set([...Object.keys(sA.stage), ...Object.keys(sB.stage)]);
+    for (const from of allStages) {
+      stageMatrix[from] = {};
+      for (const to of allStages) {
+        stageMatrix[from][to] = 0;
+      }
+    }
+    for (const sc of stageChanges) {
+      const from = sc.from || 'Unknown';
+      const to = sc.to || 'Unknown';
+      if (!stageMatrix[from]) stageMatrix[from] = {};
+      if (!stageMatrix[from][to]) stageMatrix[from][to] = 0;
+      stageMatrix[from][to]++;
+    }
+
+    return {
+      newProjects, removedProjects, commonProjects,
+      stageChanges, completedProjects, statusChanges,
+      backwardStages, stalledProjects,
+      revenueGrowth, revenueLoss,
+      netGrowth, netGrowthPct,
+      pipelineGrowth, pipelineGrowthPct,
+      areaGrowth, areaGrowthPct,
+      stageMatrix
+    };
+  }
+
+  function isBackwardStage(to, from) {
+    const toIdx = STAGE_ORDER.findIndex(k => String(to || '').toLowerCase().includes(k));
+    const fromIdx = STAGE_ORDER.findIndex(k => String(from || '').toLowerCase().includes(k));
+    if (toIdx === -1 || fromIdx === -1) return false;
+    return toIdx < fromIdx;
+  }
+
+  /* ─── FEATURE 2: Data Exception Detection ─────────────────── */
+  function detectExceptions() {
+    const exceptions = [];
+    const all = [...dataA.projects.map(p => ({ ...p, _source: 'Previous' })), ...dataB.projects.map(p => ({ ...p, _source: 'Current' }))];
+    const seen = new Set();
+
+    for (const p of all) {
+      const key = String(p.projectId || p.projectName).toLowerCase() + '|' + p._source;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const missing = [];
+      if (!p.value || p.value === 0) missing.push('Revenue');
+      if (!p.area || p.area === 0) missing.push('Area');
+      if (!p.zone) missing.push('Zone');
+      if (!p.product || p.product === 'Other') missing.push('Product');
+      if (!p.segment) missing.push('Segment');
+      if ((!p.forecast2026 || p.forecast2026 === 0) && (!p.forecast2027 || p.forecast2027 === 0)) missing.push('Forecast');
+      if (!p.stage) missing.push('Stage');
+
+      if (missing.length) {
+        exceptions.push({
+          projectId: p.projectId || '',
+          projectName: p.projectName || 'Unnamed',
+          missingFields: missing,
+          source: p._source,
+          value: p.value || 0,
+          area: p.area || 0,
+          zone: p.zone || '',
+          stage: p.stage || '',
+          product: p.product || ''
+        });
+      }
+    }
+    return exceptions;
+  }
+
+  /* ─── FEATURE 3: Executive Alerts Generation ──────────────── */
+  function generateAlerts() {
+    const alerts = [];
+    const sB = dataB.summary;
+    const c = comparison;
+
+    // Missing revenue
+    const missingRev = exceptionsData.filter(e => e.missingFields.includes('Revenue')).length;
+    if (missingRev > 0) {
+      alerts.push({ severity: 'critical', icon: '⚠', text: `${missingRev} projects have no revenue assigned`, count: missingRev });
+    }
+
+    // Missing forecast
+    const missingFc = exceptionsData.filter(e => e.missingFields.includes('Forecast')).length;
+    if (missingFc > 0) {
+      alerts.push({ severity: 'warning', icon: '⚠', text: `${missingFc} projects have no forecast value`, count: missingFc });
+    }
+
+    // Backward stage moves
+    if (c.backwardStages.length > 0) {
+      alerts.push({ severity: 'critical', icon: '↩', text: `${c.backwardStages.length} projects moved backwards in pipeline stage`, count: c.backwardStages.length });
+    }
+
+    // Removed projects
+    if (c.removedProjects.length > 0) {
+      alerts.push({ severity: 'warning', icon: '❌', text: `${c.removedProjects.length} projects removed from latest report`, count: c.removedProjects.length });
+    }
+
+    // Stalled projects
+    if (c.stalledProjects.length > 0) {
+      alerts.push({ severity: 'info', icon: '⏸', text: `${c.stalledProjects.length} projects stalled in negotiation`, count: c.stalledProjects.length });
+    }
+
+    // Missing area
+    const missingArea = exceptionsData.filter(e => e.missingFields.includes('Area')).length;
+    if (missingArea > 0) {
+      alerts.push({ severity: 'warning', icon: '⚠', text: `${missingArea} projects have no area assigned`, count: missingArea });
+    }
+
+    // Missing stage
+    const missingStage = exceptionsData.filter(e => e.missingFields.includes('Stage')).length;
+    if (missingStage > 0) {
+      alerts.push({ severity: 'info', icon: '⚠', text: `${missingStage} projects have no stage assigned`, count: missingStage });
+    }
+
+    // Sort by severity: critical first, then warning, then info
+    const severityOrder = { critical: 0, warning: 1, info: 2, success: 3 };
+    alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+
+    return alerts;
+  }
+
+  /* ─── FEATURE 9: Executive Insights Engine ────────────────── */
+  function generateExecutiveInsights() {
+    const sA = dataA.summary;
+    const sB = dataB.summary;
+    const c = comparison;
+
+    const insights = [];
+
+    // Revenue Growth %
+    const revGrowth = sA.totalValue ? ((sB.totalValue - sA.totalValue) / sA.totalValue * 100) : 0;
+    insights.push({ label: 'Revenue Growth', value: revGrowth.toFixed(1) + '%', dir: revGrowth >= 0 ? 'up' : 'down', raw: revGrowth });
+
+    // Area Growth %
+    const areaGrowth = sA.totalArea ? ((sB.totalArea - sA.totalArea) / sA.totalArea * 100) : 0;
+    insights.push({ label: 'Area Growth', value: areaGrowth.toFixed(1) + '%', dir: areaGrowth >= 0 ? 'up' : 'down', raw: areaGrowth });
+
+    // Pipeline Growth %
+    const pipeA = sA.totalValue - sA.soldValue;
+    const pipeB = sB.totalValue - sB.soldValue;
+    const pipeGrowth = pipeA ? ((pipeB - pipeA) / pipeA * 100) : 0;
+    insights.push({ label: 'Pipeline Growth', value: pipeGrowth.toFixed(1) + '%', dir: pipeGrowth >= 0 ? 'up' : 'down', raw: pipeGrowth });
+
+    // Conversion Growth %
+    const convA = sA.totalProjects ? (sA.soldCount / sA.totalProjects * 100) : 0;
+    const convB = sB.totalProjects ? (sB.soldCount / sB.totalProjects * 100) : 0;
+    const convGrowth = convA ? ((convB - convA) / convA * 100) : 0;
+    insights.push({ label: 'Conversion Growth', value: convGrowth.toFixed(1) + '%', dir: convGrowth >= 0 ? 'up' : 'down', raw: convGrowth });
+
+    // Average Project Value Growth %
+    const avgValA = sA.totalProjects ? (sA.totalValue / sA.totalProjects) : 0;
+    const avgValB = sB.totalProjects ? (sB.totalValue / sB.totalProjects) : 0;
+    const avgValGrowth = avgValA ? ((avgValB - avgValA) / avgValA * 100) : 0;
+    insights.push({ label: 'Avg Project Value Growth', value: avgValGrowth.toFixed(1) + '%', dir: avgValGrowth >= 0 ? 'up' : 'down', raw: avgValGrowth });
+
+    // Average Area Growth %
+    const avgAreaA = sA.totalProjects ? (sA.totalArea / sA.totalProjects) : 0;
+    const avgAreaB = sB.totalProjects ? (sB.totalArea / sB.totalProjects) : 0;
+    const avgAreaGrowth = avgAreaA ? ((avgAreaB - avgAreaA) / avgAreaA * 100) : 0;
+    insights.push({ label: 'Avg Area Growth', value: avgAreaGrowth.toFixed(1) + '%', dir: avgAreaGrowth >= 0 ? 'up' : 'down', raw: avgAreaGrowth });
+
+    // New Projects %
+    const newPct = sA.totalProjects ? (c.newProjects.length / sA.totalProjects * 100) : 0;
+    insights.push({ label: 'New Projects', value: newPct.toFixed(1) + '%', dir: 'up', raw: newPct });
+
+    // Removed Projects %
+    const remPct = sA.totalProjects ? (c.removedProjects.length / sA.totalProjects * 100) : 0;
+    insights.push({ label: 'Removed Projects', value: remPct.toFixed(1) + '%', dir: 'down', raw: remPct });
+
+    // Generate commentary
+    let commentary = '';
+    const topSeg = Object.entries(sB.segment).sort((a,b) => b[1] - a[1])[0];
+    if (revGrowth > 10) {
+      commentary = `Revenue increased by ${revGrowth.toFixed(1)}% driven by ${topSeg ? topSeg[0] : 'key'} projects. `;
+    } else if (revGrowth < -10) {
+      commentary = `Revenue declined by ${Math.abs(revGrowth).toFixed(1)}%. Review pipeline health and lost projects. `;
+    } else {
+      commentary = `Revenue is ${Math.abs(revGrowth) < 1 ? 'stable' : (revGrowth > 0 ? 'growing moderately' : 'declining slightly')}. `;
+    }
+    if (c.newProjects.length > 0) {
+      commentary += `${c.newProjects.length} new projects added. `;
+    }
+    if (c.completedProjects.length > 0) {
+      commentary += `${c.completedProjects.length} projects completed. `;
+    }
+    if (c.backwardStages.length > 0) {
+      commentary += `Attention: ${c.backwardStages.length} projects regressed in stage. `;
+    }
+
+    return { insights, commentary };
+  }
+
+  /* ─── FEATURE 6: Revenue Validation ───────────────────────── */
+  function validateRevenue() {
+    // Check if any project has non-zero revenue
+    const hasRevA = dataA.projects.some(p => (p.value || 0) > 0);
+    const hasRevB = dataB.projects.some(p => (p.value || 0) > 0);
+    hasRevenueData = hasRevA || hasRevB;
+    return hasRevenueData;
+  }
+
+  function showRevenueUnavailable(containerId) {
+    const el = document.getElementById(containerId);
+    if (el) {
+      el.style.display = 'block';
+      el.innerHTML = `<div class="revenue-unavailable">
+        <div class="revenue-unavailable-icon">📊</div>
+        <div class="revenue-unavailable-title">Revenue data unavailable</div>
+        <div class="revenue-unavailable-sub">Revenue-based charts are disabled. The uploaded files do not contain recognizable revenue columns (Value, Order Value, Contract Value, etc.).</div>
+      </div>`;
+    }
+  }
+
+  /* ─── Event Handlers ──────────────────────────────────────── */
+  function onDragOver(e, id) { e.preventDefault(); document.getElementById('drop'+id).classList.add('drag'); }
+  function onDragLeave(id) { document.getElementById('drop'+id).classList.remove('drag'); }
+  function onDrop(e, id) { e.preventDefault(); onDragLeave(id); const f = e.dataTransfer.files[0]; if(f) handleFile(id, { files: [f] }); }
+
+  async function handleFile(id, input) {
+    const file = input.files ? input.files[0] : input;
+    if (!file) return;
+
+    const card = document.getElementById('drop'+id);
+    const fnameEl = document.getElementById('fname'+id);
+    const metaEl = document.getElementById('meta'+id);
+    const badge = document.getElementById('dbadge'+id);
+    const datelabel = document.getElementById('datelabel'+id);
+    const errorEl = document.getElementById('uploadError');
+
+    card.classList.remove('error');
+    errorEl.style.display = 'none';
+
+    try {
+      const parsed = await parseFile(file, id);
+      if (id === 'A') { fileA = file; dataA = parsed; }
+      else { fileB = file; dataB = parsed; }
+
+      card.classList.add('loaded');
+      fnameEl.style.display = 'block';
+      fnameEl.textContent = file.name;
+      metaEl.style.display = 'block';
+      metaEl.textContent = `${parsed.projects.length} projects · ${parsed.sheetName}`;
+      badge.style.display = 'inline-flex';
+      datelabel.textContent = formatDateDisplay(parsed.date);
+
+      document.getElementById('goBtn').disabled = !(dataA.projects.length && dataB.projects.length);
+    } catch (err) {
+      console.error(err);
+      card.classList.add('error');
+      errorEl.style.display = 'block';
+      errorEl.textContent = `Error ${id === 'A' ? 'Previous' : 'Current'} file: ${err.message}`;
+    }
+  }
+
+  function clearFiles() {
+    fileA = fileB = null;
+    dataA = { projects: [], summary: {}, filename: '', date: null, sheetName: '', indexes: null };
+    dataB = { projects: [], summary: {}, filename: '', date: null, sheetName: '', indexes: null };
+    ['A','B'].forEach(id => {
+      const card = document.getElementById('drop'+id);
+      card.classList.remove('loaded','error');
+      document.getElementById('fname'+id).style.display = 'none';
+      document.getElementById('meta'+id).style.display = 'none';
+      document.getElementById('dbadge'+id).style.display = 'none';
+      document.getElementById('file'+id).value = '';
+    });
+    document.getElementById('goBtn').disabled = true;
+    document.getElementById('uploadError').style.display = 'none';
+  }
+
+  /* ─── Dashboard Navigation ────────────────────────────────── */
+  function openDashboard() {
+    if (!dataA.projects.length || !dataB.projects.length) return;
+    comparison = buildComparison();
+    allProjects = [...dataA.projects, ...dataB.projects];
+    exceptionsData = detectExceptions();
+    execInsights = generateExecutiveInsights();
+    validateRevenue();
+
+    document.getElementById('uploadScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('dateA').textContent = formatDateDisplay(dataA.date);
+    document.getElementById('dateB').textContent = formatDateDisplay(dataB.date);
+
+    destroyCharts();
+    renderOverview();
+    renderSearch();
+    renderZonal();
+    renderProduct();
+    renderProductMix();
+    renderSegment();
+    renderStage();
+    renderOrderValue();
+    renderArea();
+    renderStatus();
+    renderExceptions();
+    renderTimeline();
+  }
+
+  function backToUpload() {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('uploadScreen').style.display = 'flex';
+    destroyCharts();
+    comparison = null;
+    exceptionsData = null;
+    execInsights = null;
+  }
+
+  function destroyCharts() {
+    Object.values(chartInstances).forEach(c => { try { c.destroy(); } catch(e) {} });
+    chartInstances = {};
+  }
+
+  function showView(viewId, el) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + viewId).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    if (el && el.classList) el.classList.add('active');
+  }
+
+  /* ─── Overview Rendering (enhanced with Alerts + Insights) ── */
+  function renderOverview() {
+    const sA = dataA.summary;
+    const sB = dataB.summary;
+    const c = comparison;
+    const strip = document.getElementById('kpiStrip');
+
+    // Render Executive Alerts
+    const alerts = generateAlerts();
+    const alertsContainer = document.getElementById('execAlerts');
+    if (alerts.length > 0) {
+      alertsContainer.style.display = 'block';
+      alertsContainer.innerHTML = `
+        <div class="alert-panel">
+          <div class="alert-panel-hdr">🚨 Executive Alerts</div>
+          <div class="alert-list">
+            ${alerts.map(a => `
+              <div class="alert-item ${a.severity}">
+                <span class="alert-icon">${a.icon}</span>
+                <span class="alert-text">${a.text}</span>
+                <span class="alert-count">${a.count}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+    } else {
+      alertsContainer.style.display = 'none';
+    }
+
+    // Render Executive Insights Panel
+    const insightsPanel = document.getElementById('execInsightsPanel');
+    const insightsContent = document.getElementById('execInsightsContent');
+    if (execInsights) {
+      insightsPanel.style.display = 'block';
+      insightsContent.innerHTML = `
+        <div class="grid-4">
+          ${execInsights.insights.map(ins => {
+            const arrow = ins.dir === 'up' ? '↑' : ins.dir === 'down' ? '↓' : '→';
+            const color = ins.dir === 'up' ? 'var(--green)' : ins.dir === 'down' ? 'var(--red)' : 'var(--slate)';
+            return `<div class="kpi" style="padding:14px">
+              <div class="kpi-label">${ins.label}</div>
+              <div class="kpi-val" style="font-size:20px;color:${color}">${arrow} ${ins.value}</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="insight-commentary">
+          <strong>Management Commentary:</strong> ${execInsights.commentary}
+        </div>`;
+    }
+
+    const kpis = [
+      { cls:'kb', icon:'📊', label:'Total Projects', valA: sA.totalProjects, valB: sB.totalProjects, fmt: v => formatNumber(v), isCount: true },
+      { cls:'kt', icon:'💰', label:'Total Value', valA: sA.totalValue, valB: sB.totalValue, fmt: v => formatCurrency(v) },
+      { cls:'kg', icon:'📐', label:'Total Area', valA: sA.totalArea, valB: sB.totalArea, fmt: v => formatNumber(v) + ' sqm' },
+      { cls:'ka', icon:'✅', label:'Sold Projects', valA: sA.soldCount, valB: sB.soldCount, fmt: v => formatNumber(v), isCount: true },
+      { cls:'kp', icon:'🎯', label:'Sold Value', valA: sA.soldValue, valB: sB.soldValue, fmt: v => formatCurrency(v) },
+      { cls:'ki', icon:'🆕', label:'New Projects', valA: 0, valB: c.newProjects.length, fmt: v => formatNumber(v), isCount: true, hideDelta: true },
+      { cls:'kr', icon:'❌', label:'Removed Projects', valA: 0, valB: c.removedProjects.length, fmt: v => formatNumber(v), isCount: true, hideDelta: true },
+      { cls:'kg', icon:'🏁', label:'Completed', valA: 0, valB: c.completedProjects.length, fmt: v => formatNumber(v), isCount: true, hideDelta: true }
+    ];
+
+    strip.innerHTML = kpis.map(k => {
+      const delta = k.valB - k.valA;
+      const pct = k.valA ? ((delta / k.valA) * 100).toFixed(1) : '0.0';
+      const dir = delta > 0 ? '↑' : delta < 0 ? '↓' : '→';
+      const cls = delta > 0 ? 'kpi-up' : delta < 0 ? 'kpi-dn' : 'kpi-fl';
+      const deltaHtml = k.hideDelta
+        ? `<span class="kpi-delta ${cls}">${dir}</span>`
+        : `<span class="kpi-delta ${cls}">${dir} ${Math.abs(pct)}%</span>`;
+      return `<div class="kpi ${k.cls}">
+        <div class="kpi-icon">${k.icon}</div>
+        <div class="kpi-label">${k.label}</div>
+        <div class="kpi-val">${k.fmt(k.valB)}</div>
+        <div class="kpi-prev">Prev: ${k.fmt(k.valA)}</div>
+        <div class="kpi-sub">${deltaHtml}</div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('cmpLabel1').textContent = formatDateDisplay(dataA.date) + ' (Base)';
+    document.getElementById('cmpLabel2').textContent = formatDateDisplay(dataB.date) + ' (Current)';
+    document.getElementById('cmpVal1').textContent = formatCurrency(sA.totalValue);
+    document.getElementById('cmpVal2').textContent = formatCurrency(sB.totalValue);
+    document.getElementById('cmpProj1').textContent = formatNumber(sA.totalProjects) + ' projects · ' + formatNumber(sA.totalArea) + ' sqm';
+    document.getElementById('cmpProj2').textContent = formatNumber(sB.totalProjects) + ' projects · ' + formatNumber(sB.totalArea) + ' sqm';
+
+    const insights = [];
+    if (c.newProjects.length > 0) insights.push({ cls:'it-green', text:`+${c.newProjects.length} new projects` });
+    if (c.removedProjects.length > 0) insights.push({ cls:'it-red', text:`-${c.removedProjects.length} removed projects` });
+    if (c.completedProjects.length > 0) insights.push({ cls:'it-blue', text:`+${c.completedProjects.length} completed` });
+    if (c.stageChanges.length > 0) insights.push({ cls:'it-purple', text:`${c.stageChanges.length} stage changes` });
+    if (c.backwardStages.length > 0) insights.push({ cls:'it-red', text:`${c.backwardStages.length} backward moves` });
+    if (c.netGrowth > 0) insights.push({ cls:'it-green', text:`+${formatCurrency(c.netGrowth)} net growth` });
+    else if (c.netGrowth < 0) insights.push({ cls:'it-red', text:`${formatCurrency(c.netGrowth)} net decline` });
+    if (c.pipelineGrowth > 0) insights.push({ cls:'it-teal', text:`+${formatCurrency(c.pipelineGrowth)} pipeline growth` });
+    document.getElementById('insightRow').innerHTML = insights.map(i => `<span class="insight-tag ${i.cls}">${i.text}</span>`).join('');
+
+    const insightData = [
+      { label:'Avg Project Value', val:(sB.totalValue/sB.totalProjects/100000).toFixed(2), max:10, unit:'L', color:'#2563eb' },
+      { label:'Sold Conversion', val:((sB.soldCount/sB.totalProjects)*100).toFixed(1), max:100, unit:'%', color:'#059669' },
+      { label:'Avg Area/Project', val:(sB.totalArea/sB.totalProjects).toFixed(0), max:5000, unit:'sqm', color:'#0891b2' },
+      { label:'Pipeline Value %', val:(((sB.totalValue-sB.soldValue)/sB.totalValue)*100).toFixed(1), max:100, unit:'%', color:'#d97706' },
+      { label:'Net Growth %', val:Math.abs(c.netGrowthPct).toFixed(1), max:100, unit:'%', color: c.netGrowthPct >= 0 ? '#059669' : '#dc2626' },
+      { label:'Area Growth %', val:Math.abs(c.areaGrowthPct).toFixed(1), max:100, unit:'%', color: c.areaGrowthPct >= 0 ? '#059669' : '#dc2626' }
+    ];
+    document.getElementById('keyInsights').innerHTML = insightData.map(d => 
+      `<div class="stat-bar-row"><div class="stat-bar-label">${d.label}</div><div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.min((d.val/d.max)*100,100)}%;background:${d.color}"></div></div><div class="stat-bar-val">${d.val}${d.unit}</div></div>`
+    ).join('');
+
+    const compInsights = [
+      { label:'Revenue Growth', val: formatCurrency(c.revenueGrowth), color: '#059669' },
+      { label:'Revenue Loss', val: formatCurrency(c.revenueLoss), color: '#dc2626' },
+      { label:'Pipeline Growth %', val: c.pipelineGrowthPct.toFixed(1) + '%', color: '#0891b2' },
+      { label:'New Projects Value', val: formatCurrency(c.newProjects.reduce((a,p) => a + (p.value||0), 0)), color: '#7c3aed' },
+      { label:'Removed Projects Value', val: formatCurrency(c.removedProjects.reduce((a,p) => a + (p.value||0), 0)), color: '#d97706' }
+    ];
+    document.getElementById('comparisonInsights').innerHTML = compInsights.map(d => 
+      `<div class="stat-bar-row"><div class="stat-bar-label">${d.label}</div><div class="stat-bar-val" style="color:${d.color}">${d.val}</div></div>`
+    ).join('');
+
+    // Revenue Trend
+    if (hasRevenueData) {
+      const allMonths = [...new Set([...Object.keys(sA.monthly), ...Object.keys(sB.monthly)])].sort();
+      const aData = allMonths.map(m => (sA.monthly[m] || 0) / 100000);
+      const bData = allMonths.map(m => (sB.monthly[m] || 0) / 100000);
+
+      chartInstances.cRevTrend = new Chart(document.getElementById('cRevTrend'), {
+        type: 'bar',
+        data: {
+          labels: allMonths,
+          datasets: [
+            { label: formatDateDisplay(dataA.date), data: aData, backgroundColor: '#94a3b8', borderRadius: 4 },
+            { label: formatDateDisplay(dataB.date), data: bData, backgroundColor: '#2563eb', borderRadius: 4 }
+          ]
+        },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'},title:{display:true,text:'₹ Lakhs'}},x:{grid:{display:false}}} }
+      });
+    } else {
+      document.getElementById('cRevTrend').parentElement.innerHTML = `
+        <div class="revenue-unavailable">
+          <div class="revenue-unavailable-icon">📊</div>
+          <div class="revenue-unavailable-title">Revenue data unavailable</div>
+          <div class="revenue-unavailable-sub">Revenue-based charts are disabled. No recognizable revenue columns found.</div>
+        </div>`;
+    }
+
+    const stageLabels = Object.keys(sB.stage);
+    const stageData = Object.values(sB.stage);
+    const stageColors = ['#2563eb','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#64748b','#4338ca','#0e7490'];
+    chartInstances.cStageDonut = new Chart(document.getElementById('cStageDonut'), {
+      type: 'doughnut',
+      data: { labels: stageLabels, datasets: [{ data: stageData, backgroundColor: stageColors, borderWidth:0 }] },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{display:false}} }
+    });
+    document.getElementById('stageLegend').innerHTML = stageLabels.map((l,i) => 
+      `<div class="donut-stat"><div class="ds-label"><span class="ds-dot" style="background:${stageColors[i%stageColors.length]}"></span>${l}</div><div class="ds-val">${stageData[i]}</div></div>`
+    ).join('');
+
+    const zoneLabels = Object.keys(sB.zone);
+    const zoneData = Object.values(sB.zone);
+    chartInstances.cZoneBar = new Chart(document.getElementById('cZoneBar'), {
+      type: 'bar',
+      data: { labels: zoneLabels, datasets: [{ data: zoneData, backgroundColor: ['#2563eb','#0891b2','#059669','#d97706','#7c3aed'], borderRadius: 4 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+    });
+
+    const prodLabels = Object.keys(sB.product);
+    const prodData = Object.values(sB.product);
+    chartInstances.cProdPie = new Chart(document.getElementById('cProdPie'), {
+      type: 'pie',
+      data: { labels: prodLabels, datasets: [{ data: prodData, backgroundColor: ['#2563eb','#0891b2','#059669','#d97706','#7c3aed','#dc2626'], borderWidth: 2, borderColor:'#fff' }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10}}}} }
+    });
+
+    const segLabels = Object.keys(sB.segment).slice(0, 8);
+    const segData = segLabels.map(l => sB.segment[l]);
+    chartInstances.cSegPie = new Chart(document.getElementById('cSegPie'), {
+      type: 'doughnut',
+      data: { labels: segLabels, datasets: [{ data: segData, backgroundColor: ['#2563eb','#0891b2','#059669','#d97706','#7c3aed','#dc2626','#4338ca','#0e7490'], borderWidth:0 }] },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10}}}} }
+    });
+  }
+
+  /* ─── Search ──────────────────────────────────────────────── */
+  function renderSearch() {
+    document.getElementById('searchResults').innerHTML = '<div class="no-result"><div class="no-result-icon">🔍</div><div>Enter a search term to find projects across both files</div></div>';
+  }
+
+  function debouncedSearch(query) {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => doSearch(query), 300);
+  }
+
+  function doSearch(query) {
+    const container = document.getElementById('searchResults');
+    if (!query || query.length < 2) { 
+      container.innerHTML = '<div class="no-result"><div class="no-result-icon">🔍</div><div>Enter at least 2 characters to search</div></div>';
+      return; 
+    }
+    const q = query.toLowerCase();
+    const results = allProjects.filter(p => 
+      (p.projectName && p.projectName.toLowerCase().includes(q)) ||
+      (p.projectId && p.projectId.toLowerCase().includes(q)) ||
+      (p.city && p.city.toLowerCase().includes(q)) ||
+      (p.architect && p.architect.toLowerCase().includes(q)) ||
+      (p.contractor && p.contractor.toLowerCase().includes(q)) ||
+      (p.zone && p.zone.toLowerCase().includes(q)) ||
+      (p.segment && p.segment.toLowerCase().includes(q)) ||
+      (p.stage && p.stage.toLowerCase().includes(q)) ||
+      (p.status && p.status.toLowerCase().includes(q)) ||
+      (p.product && p.product.toLowerCase().includes(q))
+    );
+
+    const seen = new Set();
+    const unique = [];
+    for (const p of results) {
+      const key = String(p.projectId || p.projectName).toLowerCase();
+      if (!seen.has(key)) { seen.add(key); unique.push(p); }
+    }
+    const final = unique.slice(0, 30);
+
+    if (!final.length) {
+      container.innerHTML = `<div class="no-result"><div class="no-result-icon">🔍</div><div>No projects found for "${query}"</div></div>`;
+      return;
+    }
+
+    container.innerHTML = `<div class="search-results-list">${final.map(p => {
+      const source = dataA.projects.find(x => String(x.projectId || x.projectName).toLowerCase() === String(p.projectId || p.projectName).toLowerCase()) ? 'Previous' : 'Current';
+      return `<div class="search-result-item" onclick="Dashboard.showProjectDetail('${escapeHtml(p.projectId || p.projectName)}')">
+        <div><div class="sri-name">${escapeHtml(p.projectName || 'Unnamed')}</div><div class="sri-meta">${escapeHtml(p.projectId || '')} · ${escapeHtml(p.city || '')} · ${escapeHtml(p.zone || '')}</div><div class="sri-file">${source} Report</div></div>
+        <div class="sri-val">${formatCurrency(p.value || 0)}</div>
+      </div>`;
+    }).join('')}</div><div style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px">Showing ${final.length} of ${unique.length} unique matches</div>`;
+  }
+
+  /* ─── FEATURE 4: Enhanced Project Detail Panel ────────────── */
+  function showProjectDetail(id) {
+    const pA = dataA.projects.find(x => String(x.projectId || x.projectName).toLowerCase() === id.toLowerCase());
+    const pB = dataB.projects.find(x => String(x.projectId || x.projectName).toLowerCase() === id.toLowerCase());
+    const p = pB || pA;
+    if (!p) return;
+
+    const hasBoth = pA && pB;
+    const valDelta = hasBoth ? (pB.value || 0) - (pA.value || 0) : 0;
+    const areaDelta = hasBoth ? (pB.area || 0) - (pA.area || 0) : 0;
+
+    const container = document.getElementById('searchResults');
+
+    // Helper to build collapsible section
+    const buildSection = (title, content, visible) => {
+      if (!visible) return '';
+      return `<div class="collapsible-section open">
+        <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">${title}</div>
+        <div class="collapsible-body">${content}</div>
+      </div>`;
+    };
+
+    const overviewContent = `
+      <div class="proj-grid">
+        <div class="proj-field"><div class="pf-label">Project Name</div><div class="pf-val">${escapeHtml(p.projectName || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">Project ID</div><div class="pf-val">${escapeHtml(p.projectId || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">Zone</div><div class="pf-val">${escapeHtml(p.zone || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">City</div><div class="pf-val">${escapeHtml(p.city || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">Segment</div><div class="pf-val">${escapeHtml(p.segment || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">Project Type</div><div class="pf-val">${escapeHtml(p.projectType || '-')}</div></div>
+      </div>`;
+
+    const commercialContent = `
+      <div class="proj-grid">
+        <div class="proj-field"><div class="pf-label">Revenue</div><div class="pf-val-big">${formatCurrency(p.value || 0)}</div>${hasBoth ? `<div class="pf-delta ${valDelta >= 0 ? 'kpi-up' : 'kpi-dn'}">${valDelta >= 0 ? '↑' : '↓'} ${formatCurrency(Math.abs(valDelta))}</div>` : ''}</div>
+        <div class="proj-field"><div class="pf-label">Area</div><div class="pf-val-big">${formatNumber(p.area || 0)} sqm</div>${hasBoth ? `<div class="pf-delta ${areaDelta >= 0 ? 'kpi-up' : 'kpi-dn'}">${areaDelta >= 0 ? '↑' : '↓'} ${formatNumber(Math.abs(areaDelta))} sqm</div>` : ''}</div>
+        <div class="proj-field"><div class="pf-label">Status</div><div class="pf-val">${escapeHtml(p.status || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">Opportunity Stage</div><div class="pf-val">${escapeHtml(p.stage || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">Probability</div><div class="pf-val">${escapeHtml(p.probability || '-')}</div></div>
+      </div>`;
+
+    const stakeholdersContent = `
+      <div class="proj-grid">
+        <div class="proj-field"><div class="pf-label">Architect</div><div class="pf-val">${escapeHtml(p.architect || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">Contractor</div><div class="pf-val">${escapeHtml(p.contractor || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">Channel Partner</div><div class="pf-val">${escapeHtml(p.channelPartner || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">POC</div><div class="pf-val">${escapeHtml(p.poc || '-')}</div></div>
+      </div>`;
+
+    const forecastContent = `
+      <div class="proj-grid">
+        <div class="proj-field"><div class="pf-label">FY 2026</div><div class="pf-val">${formatCurrency(p.forecast2026 || 0)}</div></div>
+        <div class="proj-field"><div class="pf-label">FY 2027</div><div class="pf-val">${formatCurrency(p.forecast2027 || 0)}</div></div>
+        <div class="proj-field"><div class="pf-label">Total Forecast</div><div class="pf-val">${formatCurrency((p.forecast2026 || 0) + (p.forecast2027 || 0))}</div></div>
+      </div>`;
+
+    const productContent = `
+      <div class="proj-grid">
+        <div class="proj-field"><div class="pf-label">Product Type</div><div class="pf-val">${escapeHtml(p.product || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">Application</div><div class="pf-val">${escapeHtml(p.product || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">Specification</div><div class="pf-val">${escapeHtml(p.specification || '-')}</div></div>
+      </div>`;
+
+    const timelineContent = `
+      <div class="proj-grid">
+        <div class="proj-field"><div class="pf-label">Created Date</div><div class="pf-val">${formatDateDisplay(p.createdDate)}</div></div>
+        <div class="proj-field"><div class="pf-label">Modified Date</div><div class="pf-val">${formatDateDisplay(p.updatedDate)}</div></div>
+        <div class="proj-field"><div class="pf-label">Close Date</div><div class="pf-val">${formatDateDisplay(p.closeDate)}</div></div>
+        <div class="proj-field"><div class="pf-label">Delivery Date</div><div class="pf-val">${formatDateDisplay(p.deliveryDate)}</div></div>
+      </div>`;
+
+    const comparisonContent = hasBoth ? `
+      <div class="proj-grid">
+        <div class="proj-field"><div class="pf-label">Previous Value</div><div class="pf-val">${formatCurrency(pA.value || 0)}</div></div>
+        <div class="proj-field"><div class="pf-label">Current Value</div><div class="pf-val">${formatCurrency(pB.value || 0)}</div></div>
+        <div class="proj-field"><div class="pf-label">Previous Stage</div><div class="pf-val">${escapeHtml(pA.stage || '-')}</div></div>
+        <div class="proj-field"><div class="pf-label">Current Stage</div><div class="pf-val">${escapeHtml(pB.stage || '-')}</div></div>
+      </div>` : '';
+
+    container.innerHTML = `
+      <div class="proj-card">
+        <div class="proj-card-header">
+          <div class="proj-name">${escapeHtml(p.projectName || 'Unnamed Project')}</div>
+          <div class="proj-id">${escapeHtml(p.projectId || 'No ID')}</div>
+          <div class="proj-meta">
+            <span class="tag ${p._sold ? 'tag-sold' : p.stage && p.stage.includes('negotiation') ? 'tag-neg' : 'tag-spec'}">${escapeHtml(p.stage || 'Unknown')}</span>
+            <span class="tag tag-fut">${escapeHtml(p.zone || '')}</span>
+            <span class="tag tag-fut">${escapeHtml(p.segment || '')}</span>
+            ${p._completed ? '<span class="tag tag-comp">Completed</span>' : ''}
+          </div>
+        </div>
+        <div class="proj-card-body">
+          ${buildSection('📋 Overview', overviewContent, true)}
+          ${buildSection('💼 Commercial', commercialContent, p.value || p.area || p.stage || p.status)}
+          ${buildSection('👥 Stakeholders', stakeholdersContent, p.architect || p.contractor || p.channelPartner || p.poc)}
+          ${buildSection('📈 Forecast', forecastContent, p.forecast2026 || p.forecast2027)}
+          ${buildSection('📦 Product Information', productContent, p.product || p.specification)}
+          ${buildSection('📅 Timeline', timelineContent, p.createdDate || p.updatedDate || p.closeDate || p.deliveryDate)}
+          ${buildSection('🔄 Comparison', comparisonContent, hasBoth)}
+        </div>
+      </div>`;
+  }
+
+  /* ─── Zonal ───────────────────────────────────────────────── */
+  function renderZonal() {
+    const sB = dataB.summary;
+    const zones = Object.keys(sB.zone);
+    const colors = ['#2563eb','#0891b2','#059669','#d97706','#7c3aed','#dc2626'];
+
+    chartInstances.cZoneProj = new Chart(document.getElementById('cZoneProj'), {
+      type: 'bar',
+      data: { labels: zones, datasets: [{ label: 'Projects', data: zones.map(z => sB.zone[z]), backgroundColor: colors, borderRadius: 4 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+    });
+
+    if (hasRevenueData) {
+      const zoneRev = zones.map(z => dataB.projects.filter(p => p.zone === z).reduce((a,p) => a + (p.value||0), 0) / 100000);
+      chartInstances.cZoneRev = new Chart(document.getElementById('cZoneRev'), {
+        type: 'bar',
+        data: { labels: zones, datasets: [{ label: 'Revenue (₹L)', data: zoneRev, backgroundColor: colors, borderRadius: 4 }] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+      });
+    } else {
+      document.getElementById('cZoneRev').parentElement.innerHTML = `
+        <div class="revenue-unavailable">
+          <div class="revenue-unavailable-icon">📊</div>
+          <div class="revenue-unavailable-title">Revenue data unavailable</div>
+          <div class="revenue-unavailable-sub">Revenue-based charts are disabled.</div>
+        </div>`;
+    }
+
+    const zoneArea = zones.map(z => dataB.projects.filter(p => p.zone === z).reduce((a,p) => a + (p.area||0), 0));
+    chartInstances.cZoneArea = new Chart(document.getElementById('cZoneArea'), {
+      type: 'bar',
+      data: { labels: zones, datasets: [{ label: 'Area (sqm)', data: zoneArea, backgroundColor: colors, borderRadius: 4 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+    });
+
+    const totalProj = sB.totalProjects;
+    document.getElementById('zoneDetail').innerHTML = zones.map((z,i) => {
+      const proj = sB.zone[z];
+      const rev = dataB.projects.filter(p => p.zone === z).reduce((a,p) => a + (p.value||0), 0);
+      const area = dataB.projects.filter(p => p.zone === z).reduce((a,p) => a + (p.area||0), 0);
+      const forecast = dataB.projects.filter(p => p.zone === z).reduce((a,p) => a + (p.forecast2026||0) + (p.forecast2027||0), 0);
+      return `<div class="dist-card">
+        <div class="dc-label">${escapeHtml(z)}</div>
+        <div class="dc-metric"><div class="dc-count">${proj}</div><div class="dc-unit">projects</div></div>
+        <div class="dc-pct">${hasRevenueData ? formatCurrency(rev) + ' · ' : ''}${formatNumber(area)} sqm</div>
+        <div class="dc-pct">Forecast: ${formatCurrency(forecast)}</div>
+        <div class="dc-bar"><div class="dc-bar-fill" style="width:${(proj/totalProj*100).toFixed(1)}%;background:${colors[i%colors.length]}"></div></div>
+      </div>`;
+    }).join('');
+
+    const stages = Object.keys(sB.stage);
+    const zoneStageData = zones.map(z => stages.map(st => dataB.projects.filter(p => p.zone === z && p.stage === st).length));
+    chartInstances.cZoneStage = new Chart(document.getElementById('cZoneStage'), {
+      type: 'bar',
+      data: { labels: zones, datasets: stages.map((st,i) => ({ label: st, data: zones.map((_,zi) => zoneStageData[zi][i]), backgroundColor: colors[i%colors.length] || '#64748b' })) },
+      options: { responsive:true, maintainAspectRatio:false, scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,grid:{color:'#e8ecf4'}}}, plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}} }
+    });
+  }
+
+  /* ─── Product ─────────────────────────────────────────────── */
+  function renderProduct() {
+    const sB = dataB.summary, sA = dataA.summary;
+    const prods = Object.keys(sB.product);
+    const colors = ['#2563eb','#0891b2','#059669','#d97706','#7c3aed','#dc2626','#4338ca'];
+
+    chartInstances.cProdDist = new Chart(document.getElementById('cProdDist'), {
+      type: 'doughnut',
+      data: { labels: prods, datasets: [{ data: prods.map(p => sB.product[p]), backgroundColor: colors, borderWidth:0 }] },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10}}}} }
+    });
+
+    if (hasRevenueData) {
+      const prodRev = prods.map(pr => dataB.projects.filter(p => p.product === pr).reduce((a,p) => a + (p.value||0), 0) / 100000);
+      chartInstances.cProdRev = new Chart(document.getElementById('cProdRev'), {
+        type: 'bar',
+        data: { labels: prods, datasets: [{ data: prodRev, backgroundColor: colors, borderRadius: 4 }] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+      });
+    } else {
+      document.getElementById('cProdRev').parentElement.innerHTML = `
+        <div class="revenue-unavailable">
+          <div class="revenue-unavailable-icon">📊</div>
+          <div class="revenue-unavailable-title">Revenue data unavailable</div>
+          <div class="revenue-unavailable-sub">Revenue-based charts are disabled.</div>
+        </div>`;
+    }
+
+    const prodArea = prods.map(pr => dataB.projects.filter(p => p.product === pr).reduce((a,p) => a + (p.area||0), 0));
+    chartInstances.cProdArea = new Chart(document.getElementById('cProdArea'), {
+      type: 'bar',
+      data: { labels: prods, datasets: [{ data: prodArea, backgroundColor: colors, borderRadius: 4 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+    });
+
+    const prodRows = prods.map(pr => {
+      const proj = dataB.projects.filter(p => p.product === pr);
+      const count = proj.length;
+      const rev = proj.reduce((a,p) => a + (p.value||0), 0);
+      const area = proj.reduce((a,p) => a + (p.area||0), 0);
+      const forecast = proj.reduce((a,p) => a + (p.forecast2026||0) + (p.forecast2027||0), 0);
+      return { product: pr, count, rev, area, forecast };
+    }).sort((a,b) => b.rev - a.rev);
+
+    document.getElementById('prodDetail').innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Product</th><th class="num">Projects</th><th class="num">Revenue</th><th class="num">Area</th><th class="num">Forecast</th></tr></thead>
+        <tbody>${prodRows.map(r => `<tr><td>${escapeHtml(r.product)}</td><td class="num">${r.count}</td><td class="num">${hasRevenueData ? formatCurrency(r.rev) : '—'}</td><td class="num">${formatNumber(r.area)}</td><td class="num">${formatCurrency(r.forecast)}</td></tr>`).join('')}</tbody>
+      </table>`;
+
+    const allProds = [...new Set([...Object.keys(sA.product), ...Object.keys(sB.product)])];
+    chartInstances.cProdCompare = new Chart(document.getElementById('cProdCompare'), {
+      type: 'bar',
+      data: { labels: allProds, datasets: [
+        { label: formatDateDisplay(dataA.date), data: allProds.map(p => sA.product[p] || 0), backgroundColor: '#94a3b8', borderRadius: 4 },
+        { label: formatDateDisplay(dataB.date), data: allProds.map(p => sB.product[p] || 0), backgroundColor: '#2563eb', borderRadius: 4 }
+      ]},
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+    });
+  }
+
+  /* ─── FEATURE 5: Product Mix Analytics Page ───────────────── */
+  function renderProductMix() {
+    const sB = dataB.summary, sA = dataA.summary;
+    const prods = Object.keys(sB.product);
+    const colors = ['#2563eb','#0891b2','#059669','#d97706','#7c3aed','#dc2626','#4338ca'];
+
+    // Top products by revenue
+    if (hasRevenueData) {
+      const revData = prods.map(pr => ({
+        product: pr,
+        rev: dataB.projects.filter(p => p.product === pr).reduce((a,p) => a + (p.value||0), 0) / 100000
+      })).sort((a,b) => b.rev - a.rev).slice(0, 8);
+      chartInstances.cMixRev = new Chart(document.getElementById('cMixRev'), {
+        type: 'bar',
+        data: { labels: revData.map(d => d.product.length > 15 ? d.product.slice(0,15)+'...' : d.product), datasets: [{ data: revData.map(d => d.rev), backgroundColor: colors, borderRadius: 4 }] },
+        options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,grid:{color:'#e8ecf4'}},y:{grid:{display:false}}} }
+      });
+    } else {
+      document.getElementById('cMixRev').parentElement.innerHTML = `
+        <div class="revenue-unavailable">
+          <div class="revenue-unavailable-icon">📊</div>
+          <div class="revenue-unavailable-title">Revenue data unavailable</div>
+          <div class="revenue-unavailable-sub">Revenue-based charts are disabled.</div>
+        </div>`;
+    }
+
+    // Top products by area
+    const areaData = prods.map(pr => ({
+      product: pr,
+      area: dataB.projects.filter(p => p.product === pr).reduce((a,p) => a + (p.area||0), 0)
+    })).sort((a,b) => b.area - a.area).slice(0, 8);
+    chartInstances.cMixArea = new Chart(document.getElementById('cMixArea'), {
+      type: 'bar',
+      data: { labels: areaData.map(d => d.product.length > 15 ? d.product.slice(0,15)+'...' : d.product), datasets: [{ data: areaData.map(d => d.area), backgroundColor: colors, borderRadius: 4 }] },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,grid:{color:'#e8ecf4'}},y:{grid:{display:false}}} }
+    });
+
+    // Top products by count
+    const countData = prods.map(pr => ({
+      product: pr,
+      count: dataB.projects.filter(p => p.product === pr).length
+    })).sort((a,b) => b.count - a.count).slice(0, 8);
+    chartInstances.cMixCount = new Chart(document.getElementById('cMixCount'), {
+      type: 'bar',
+      data: { labels: countData.map(d => d.product.length > 15 ? d.product.slice(0,15)+'...' : d.product), datasets: [{ data: countData.map(d => d.count), backgroundColor: colors, borderRadius: 4 }] },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,grid:{color:'#e8ecf4'}},y:{grid:{display:false}}} }
+    });
+
+    // Product mix comparison (pie)
+    const allProds = [...new Set([...Object.keys(sA.product), ...Object.keys(sB.product)])];
+    chartInstances.cMixCompare = new Chart(document.getElementById('cMixCompare'), {
+      type: 'doughnut',
+      data: { labels: allProds, datasets: [
+        { label: formatDateDisplay(dataA.date), data: allProds.map(p => sA.product[p] || 0), backgroundColor: '#94a3b8', borderWidth:0 },
+        { label: formatDateDisplay(dataB.date), data: allProds.map(p => sB.product[p] || 0), backgroundColor: '#2563eb', borderWidth:0 }
+      ]},
+      options: { responsive:true, maintainAspectRatio:false, cutout:'50%', plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10}}}} }
+    });
+
+    // Metrics table
+    const metrics = prods.map(pr => {
+      const proj = dataB.projects.filter(p => p.product === pr);
+      const count = proj.length;
+      const rev = proj.reduce((a,p) => a + (p.value||0), 0);
+      const area = proj.reduce((a,p) => a + (p.area||0), 0);
+      return { product: pr, count, rev, area, avgRev: count ? rev/count : 0 };
+    }).sort((a,b) => b.rev - a.rev);
+
+    document.getElementById('mixMetrics').innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Product</th><th class="num">Projects</th><th class="num">Revenue</th><th class="num">Area</th><th class="num">Avg Revenue</th></tr></thead>
+        <tbody>${metrics.map(r => `<tr><td>${escapeHtml(r.product)}</td><td class="num">${r.count}</td><td class="num">${hasRevenueData ? formatCurrency(r.rev) : '—'}</td><td class="num">${formatNumber(r.area)}</td><td class="num">${hasRevenueData ? formatCurrency(r.avgRev) : '—'}</td></tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  /* ─── Segment ─────────────────────────────────────────────── */
+  function renderSegment() {
+    const sB = dataB.summary;
+    const segs = Object.keys(sB.segment);
+    const colors = ['#2563eb','#0891b2','#059669','#d97706','#7c3aed','#dc2626','#4338ca','#0e7490'];
+
+    chartInstances.cSegProj = new Chart(document.getElementById('cSegProj'), {
+      type: 'bar',
+      data: { labels: segs, datasets: [{ data: segs.map(s => sB.segment[s]), backgroundColor: colors, borderRadius: 4 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false},ticks:{font:{size:10}}}} }
+    });
+
+    if (hasRevenueData) {
+      const segRev = segs.map(s => dataB.projects.filter(p => p.segment === s).reduce((a,p) => a + (p.value||0), 0) / 100000);
+      chartInstances.cSegRev = new Chart(document.getElementById('cSegRev'), {
+        type: 'bar',
+        data: { labels: segs, datasets: [{ data: segRev, backgroundColor: colors, borderRadius: 4 }] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false},ticks:{font:{size:10}}}} }
+      });
+    } else {
+      document.getElementById('cSegRev').parentElement.innerHTML = `
+        <div class="revenue-unavailable">
+          <div class="revenue-unavailable-icon">📊</div>
+          <div class="revenue-unavailable-title">Revenue data unavailable</div>
+          <div class="revenue-unavailable-sub">Revenue-based charts are disabled.</div>
+        </div>`;
+    }
+
+    const segArea = segs.map(s => dataB.projects.filter(p => p.segment === s).reduce((a,p) => a + (p.area||0), 0));
+    chartInstances.cSegArea = new Chart(document.getElementById('cSegArea'), {
+      type: 'bar',
+      data: { labels: segs, datasets: [{ data: segArea, backgroundColor: colors, borderRadius: 4 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false},ticks:{font:{size:10}}}} }
+    });
+
+    const segRows = segs.map(s => {
+      const proj = dataB.projects.filter(p => p.segment === s);
+      return { segment: s, count: proj.length, rev: proj.reduce((a,p) => a + (p.value||0), 0), area: proj.reduce((a,p) => a + (p.area||0), 0) };
+    }).sort((a,b) => b.rev - a.rev);
+
+    document.getElementById('segDetail').innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Segment</th><th class="num">Projects</th><th class="num">Revenue</th><th class="num">Area</th><th class="num">Avg Value</th></tr></thead>
+        <tbody>${segRows.map(r => `<tr><td>${escapeHtml(r.segment)}</td><td class="num">${r.count}</td><td class="num">${hasRevenueData ? formatCurrency(r.rev) : '—'}</td><td class="num">${formatNumber(r.area)}</td><td class="num">${hasRevenueData ? formatCurrency(r.rev/r.count) : '—'}</td></tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  /* ─── Stage / Pipeline ────────────────────────────────────── */
+  function renderStage() {
+    const sB = dataB.summary;
+    const c = comparison;
+    const stages = Object.keys(sB.stage);
+    const colors = ['#2563eb','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#64748b','#4338ca','#0e7490'];
+
+    chartInstances.cStageDist = new Chart(document.getElementById('cStageDist'), {
+      type: 'bar',
+      data: { labels: stages, datasets: [{ data: stages.map(s => sB.stage[s]), backgroundColor: colors, borderRadius: 4 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false},ticks:{font:{size:10}}}} }
+    });
+
+    const funnelTotal = stages.map(s => sB.stage[s]).reduce((a,b) => a+b, 0);
+    document.getElementById('stageFunnel').innerHTML = stages.map((s,i) => {
+      const count = sB.stage[s];
+      const pct = funnelTotal ? ((count/funnelTotal)*100).toFixed(1) : 0;
+      const width = Math.max(parseFloat(pct), 3);
+      return `<div class="funnel-row">
+        <div class="funnel-label">${escapeHtml(s)}</div>
+        <div class="funnel-bar" style="width:${width}%;background:${colors[i%colors.length]}">${count}</div>
+        <div class="funnel-pct">${pct}%</div>
+      </div>`;
+    }).join('');
+
+    const allStages = [...new Set([...Object.keys(c.stageMatrix), ...stages])].filter(s => s);
+    if (allStages.length > 1) {
+      const matrixHtml = `<div class="matrix-grid" style="grid-template-columns: repeat(${allStages.length + 1}, minmax(80px, 1fr))">
+        <div class="matrix-cell header">From \ To</div>
+        ${allStages.map(s => `<div class="matrix-cell header">${escapeHtml(s.length > 12 ? s.slice(0,12)+'...' : s)}</div>`).join('')}
+        ${allStages.map(from => {
+          const rowTotal = allStages.reduce((a,to) => a + (c.stageMatrix[from]?.[to] || 0), 0);
+          return `<div class="matrix-cell header">${escapeHtml(from.length > 12 ? from.slice(0,12)+'...' : from)}${rowTotal > 0 ? `<br><span style="font-size:9px;color:var(--text3)">${rowTotal} moved</span>` : ''}</div>` +
+            allStages.map(to => {
+              const val = c.stageMatrix[from]?.[to] || 0;
+              const cls = from === to ? 'neutral' : val > 0 ? (isLaterStage(to, from) ? 'positive' : 'negative') : 'neutral';
+              return `<div class="matrix-cell value ${cls}">${val || '·'}</div>`;
+            }).join('');
+        }).join('')}
+      </div>`;
+      document.getElementById('stageMatrix').innerHTML = matrixHtml;
+    } else {
+      document.getElementById('stageMatrix').innerHTML = '<div style="text-align:center;color:var(--text3);padding:24px">Insufficient stage data for transition matrix</div>';
+    }
+
+    if (c.stageChanges.length) {
+      const grouped = {};
+      for (const sc of c.stageChanges) {
+        const key = `${sc.from || 'Unknown'} → ${sc.to || 'Unknown'}`;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(sc);
+      }
+      const sorted = Object.entries(grouped).sort((a,b) => b[1].length - a[1].length).slice(0, 15);
+      document.getElementById('stageTransitions').innerHTML = sorted.map(([key, items]) => {
+        const [from, to] = key.split(' → ');
+        return `<div class="transition-item">
+          <div class="transition-from">${escapeHtml(from)}</div>
+          <div class="transition-arrow">→</div>
+          <div class="transition-to">${escapeHtml(to)}</div>
+          <div class="transition-count">${items.length} projects</div>
+        </div>`;
+      }).join('');
+    } else {
+      document.getElementById('stageTransitions').innerHTML = '<div style="text-align:center;color:var(--text3);padding:24px">No stage changes detected between reports</div>';
+    }
+  }
+
+  function isLaterStage(to, from) {
+    const order = ['future','enquiry','specified','negotiation','sold','completed','closed'];
+    const toIdx = order.findIndex(k => String(to || '').toLowerCase().includes(k));
+    const fromIdx = order.findIndex(k => String(from || '').toLowerCase().includes(k));
+    if (toIdx === -1 || fromIdx === -1) return false;
+    return toIdx > fromIdx;
+  }
+
+  /* ─── Order Value ─────────────────────────────────────────── */
+  function renderOrderValue() {
+    const sB = dataB.summary;
+    const buckets = ['0-5L','5L-25L','25L-1Cr','1Cr-5Cr','5Cr+'];
+    const colors = ['#2563eb','#3b82f6','#60a5fa','#93c5fd','#bfdbfe'];
+
+    if (!hasRevenueData) {
+      showRevenueUnavailable('revUnavailableOrderval');
+      document.getElementById('ordervalCharts').style.display = 'none';
+      document.getElementById('ordervalDetailPanel').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('revUnavailableOrderval').style.display = 'none';
+    document.getElementById('ordervalCharts').style.display = 'grid';
+    document.getElementById('ordervalDetailPanel').style.display = 'block';
+
+    const counts = buckets.map(b => sB.valueBuckets[b] || 0);
+    chartInstances.cValCount = new Chart(document.getElementById('cValCount'), {
+      type: 'bar',
+      data: { labels: buckets, datasets: [{ data: counts, backgroundColor: colors, borderRadius: 4 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+    });
+
+    const revs = buckets.map(b => {
+      const bounds = { '0-5L':[0,500000], '5L-25L':[500000,2500000], '25L-1Cr':[2500000,10000000], '1Cr-5Cr':[10000000,50000000], '5Cr+':[50000000,Infinity] };
+      const [min,max] = bounds[b];
+      return dataB.projects.filter(p => (p.value||0) >= min && (p.value||0) < max).reduce((a,p) => a + (p.value||0), 0) / 100000;
+    });
+    chartInstances.cValRev = new Chart(document.getElementById('cValRev'), {
+      type: 'bar',
+      data: { labels: buckets, datasets: [{ data: revs, backgroundColor: colors, borderRadius: 4 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+    });
+
+    const bounds = { '0-5L':[0,500000], '5L-25L':[500000,2500000], '25L-1Cr':[2500000,10000000], '1Cr-5Cr':[10000000,50000000], '5Cr+':[50000000,Infinity] };
+    const rows = buckets.map(b => {
+      const [min,max] = bounds[b];
+      const proj = dataB.projects.filter(p => (p.value||0) >= min && (p.value||0) < max);
+      const count = proj.length;
+      const rev = proj.reduce((a,p) => a + (p.value||0), 0);
+      const avg = count ? rev / count : 0;
+      return { band: b, count, rev, avg };
+    });
+
+    document.getElementById('valDetail').innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Value Band</th><th class="num">Projects</th><th class="num">Revenue</th><th class="num">Average</th></tr></thead>
+        <tbody>${rows.map(r => `<tr><td>${r.band}</td><td class="num">${r.count}</td><td class="num">${formatCurrency(r.rev)}</td><td class="num">${formatCurrency(r.avg)}</td></tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  /* ─── Area ────────────────────────────────────────────────── */
+  function renderArea() {
+    const sB = dataB.summary;
+    const buckets = ['0-500','500-1000','1000-2000','2000-5000','5000-10000','10000+'];
+    const colors = ['#2563eb','#3b82f6','#60a5fa','#93c5fd','#bfdbfe','#dbeafe'];
+
+    const counts = buckets.map(b => sB.areaBuckets[b] || 0);
+    chartInstances.cAreaCount = new Chart(document.getElementById('cAreaCount'), {
+      type: 'bar',
+      data: { labels: buckets, datasets: [{ data: counts, backgroundColor: colors, borderRadius: 4 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+    });
+
+    if (hasRevenueData) {
+      const bounds = { '0-500':[0,500], '500-1000':[500,1000], '1000-2000':[1000,2000], '2000-5000':[2000,5000], '5000-10000':[5000,10000], '10000+':[10000,Infinity] };
+      const revs = buckets.map(b => {
+        const [min,max] = bounds[b];
+        return dataB.projects.filter(p => (p.area||0) >= min && (p.area||0) < max).reduce((a,p) => a + (p.value||0), 0) / 100000;
+      });
+      chartInstances.cAreaRev = new Chart(document.getElementById('cAreaRev'), {
+        type: 'bar',
+        data: { labels: buckets, datasets: [{ data: revs, backgroundColor: colors, borderRadius: 4 }] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+      });
+    } else {
+      document.getElementById('cAreaRev').parentElement.innerHTML = `
+        <div class="revenue-unavailable">
+          <div class="revenue-unavailable-icon">📊</div>
+          <div class="revenue-unavailable-title">Revenue data unavailable</div>
+          <div class="revenue-unavailable-sub">Revenue-based charts are disabled.</div>
+        </div>`;
+    }
+
+    const bounds = { '0-500':[0,500], '500-1000':[500,1000], '1000-2000':[1000,2000], '2000-5000':[2000,5000], '5000-10000':[5000,10000], '10000+':[10000,Infinity] };
+    const rows = buckets.map(b => {
+      const [min,max] = bounds[b];
+      const proj = dataB.projects.filter(p => (p.area||0) >= min && (p.area||0) < max);
+      const count = proj.length;
+      const rev = proj.reduce((a,p) => a + (p.value||0), 0);
+      const area = proj.reduce((a,p) => a + (p.area||0), 0);
+      const avg = count ? area / count : 0;
+      const largest = proj.length ? Math.max(...proj.map(p => p.area || 0)) : 0;
+      return { band: b, count, rev, avg, largest };
+    });
+
+    document.getElementById('areaDetail').innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Area Band</th><th class="num">Projects</th><th class="num">Revenue</th><th class="num">Avg Area</th><th class="num">Largest</th></tr></thead>
+        <tbody>${rows.map(r => `<tr><td>${r.band} sqm</td><td class="num">${r.count}</td><td class="num">${hasRevenueData ? formatCurrency(r.rev) : '—'}</td><td class="num">${formatNumber(Math.round(r.avg))}</td><td class="num">${formatNumber(r.largest)}</td></tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  /* ─── Status ──────────────────────────────────────────────── */
+  function renderStatus() {
+    const sB = dataB.summary, sA = dataA.summary;
+    const statuses = Object.keys(sB.status);
+    const colors = ['#059669','#d97706','#dc2626','#7c3aed','#2563eb','#0891b2','#64748b'];
+
+    const statusData = statuses.map(s => sB.status[s]);
+    chartInstances.cStatusDist = new Chart(document.getElementById('cStatusDist'), {
+      type: 'doughnut',
+      data: { labels: statuses, datasets: [{ data: statusData, backgroundColor: colors, borderWidth:0 }] },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{display:false}} }
+    });
+    document.getElementById('statusLegend').innerHTML = statuses.map((l,i) => 
+      `<div class="legend-item"><span class="legend-dot" style="background:${colors[i%colors.length]}"></span>${escapeHtml(l)} (${statusData[i]})</div>`
+    ).join('');
+
+    const allStatuses = [...new Set([...Object.keys(sA.status), ...statuses])];
+    chartInstances.cStatusCompare = new Chart(document.getElementById('cStatusCompare'), {
+      type: 'bar',
+      data: { labels: allStatuses, datasets: [
+        { label: formatDateDisplay(dataA.date), data: allStatuses.map(s => sA.status[s] || 0), backgroundColor: '#94a3b8', borderRadius: 4 },
+        { label: formatDateDisplay(dataB.date), data: allStatuses.map(s => sB.status[s] || 0), backgroundColor: '#2563eb', borderRadius: 4 }
+      ]},
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false},ticks:{font:{size:10}}}} }
+    });
+
+    const c = comparison;
+    if (c.statusChanges.length) {
+      const grouped = {};
+      for (const sc of c.statusChanges) {
+        const key = `${sc.from || 'Unknown'} → ${sc.to || 'Unknown'}`;
+        grouped[key] = (grouped[key] || 0) + 1;
+      }
+      const sorted = Object.entries(grouped).sort((a,b) => b[1] - a[1]).slice(0, 10);
+      document.getElementById('statusChangeSummary').innerHTML = sorted.map(([key, count]) => 
+        `<div class="transition-item"><div class="transition-from">${escapeHtml(key.split(' → ')[0])}</div><div class="transition-arrow">→</div><div class="transition-to">${escapeHtml(key.split(' → ')[1])}</div><div class="transition-count">${count}</div></div>`
+      ).join('');
+    } else {
+      document.getElementById('statusChangeSummary').innerHTML = '<div style="text-align:center;color:var(--text3);padding:24px">No status changes detected</div>';
+    }
+
+    const total = sB.totalProjects;
+    const rows = statuses.map((s,i) => {
+      const count = sB.status[s];
+      const pct = total ? ((count/total)*100).toFixed(1) : 0;
+      return { status: s, count, pct, color: colors[i%colors.length] };
+    }).sort((a,b) => b.count - a.count);
+
+    document.getElementById('statusDetail').innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Status</th><th class="num">Count</th><th class="num">Percentage</th><th>Distribution</th></tr></thead>
+        <tbody>${rows.map(r => `<tr><td><span class="legend-dot" style="background:${r.color};display:inline-block;margin-right:6px;vertical-align:middle"></span>${escapeHtml(r.status)}</td><td class="num">${r.count}</td><td class="num">${r.pct}%</td><td style="width:200px"><div class="stat-bar-track" style="height:8px"><div class="stat-bar-fill" style="width:${r.pct}%;background:${r.color}"></div></div></td></tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  /* ─── FEATURE 2: Data Exceptions Page ─────────────────────── */
+  function renderExceptions() {
+    if (!exceptionsData || !exceptionsData.length) {
+      document.getElementById('exceptionCards').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text3)">No data exceptions found. All records are complete.</div>';
+      document.getElementById('exceptionsTable').innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3)">No exceptions to display.</div>';
+      return;
+    }
+
+    const missingRev = exceptionsData.filter(e => e.missingFields.includes('Revenue')).length;
+    const missingArea = exceptionsData.filter(e => e.missingFields.includes('Area')).length;
+    const missingZone = exceptionsData.filter(e => e.missingFields.includes('Zone')).length;
+    const missingProduct = exceptionsData.filter(e => e.missingFields.includes('Product')).length;
+    const missingStage = exceptionsData.filter(e => e.missingFields.includes('Stage')).length;
+    const missingForecast = exceptionsData.filter(e => e.missingFields.includes('Forecast')).length;
+
+    document.getElementById('exceptionCards').innerHTML = `
+      <div class="exception-card critical" style="position:relative">
+        <div class="exception-count">${missingRev}</div>
+        <div class="exception-label">Missing Revenue</div>
+      </div>
+      <div class="exception-card warning" style="position:relative">
+        <div class="exception-count">${missingArea}</div>
+        <div class="exception-label">Missing Area</div>
+      </div>
+      <div class="exception-card warning" style="position:relative">
+        <div class="exception-count">${missingZone}</div>
+        <div class="exception-label">Missing Zone</div>
+      </div>
+      <div class="exception-card info" style="position:relative">
+        <div class="exception-count">${missingProduct}</div>
+        <div class="exception-label">Missing Product</div>
+      </div>
+      <div class="exception-card info" style="position:relative">
+        <div class="exception-count">${missingStage}</div>
+        <div class="exception-label">Missing Stage</div>
+      </div>
+      <div class="exception-card warning" style="position:relative">
+        <div class="exception-count">${missingForecast}</div>
+        <div class="exception-label">Missing Forecast</div>
+      </div>
+    `;
+
+    renderExceptionsTable('all');
+  }
+
+  function renderExceptionsTable(filter) {
+    let filtered = exceptionsData;
+    if (filter !== 'all') {
+      filtered = exceptionsData.filter(e => e.missingFields.map(f => f.toLowerCase()).includes(filter));
+    }
+
+    if (!filtered.length) {
+      document.getElementById('exceptionsTable').innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3)">No exceptions match the selected filter.</div>';
+      return;
+    }
+
+    document.getElementById('exceptionsTable').innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Project ID</th>
+            <th>Project Name</th>
+            <th>Missing Fields</th>
+            <th>Source File</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.map(e => `
+            <tr style="cursor:pointer" onclick="Dashboard.showProjectDetail('${escapeHtml(e.projectId || e.projectName)}')">
+              <td class="mono">${escapeHtml(e.projectId || '—')}</td>
+              <td>${escapeHtml(e.projectName)}</td>
+              <td>${e.missingFields.map(f => `<span class="tag tag-pend">${f}</span>`).join(' ')}</td>
+              <td>${e.source}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px">Showing ${filtered.length} of ${exceptionsData.length} exceptions</div>
+    `;
+  }
+
+  function filterExceptions(type) {
+    document.querySelectorAll('#exceptionFilters .filter-chip').forEach(c => c.classList.remove('active'));
+    event.target.classList.add('active');
+    renderExceptionsTable(type);
+  }
+
+  /* ─── FEATURE 10: Timeline Analytics Page ──────────────────── */
+  function renderTimeline() {
+    const hasDates = dataB.projects.some(p => p.createdDate || p.closeDate || p.deliveryDate);
+    if (!hasDates) {
+      document.getElementById('view-timeline').innerHTML = `
+        <div class="section-eyebrow">Timeline Analytics</div>
+        <div class="section-headline">Project Lifecycle Trends</div>
+        <div class="section-sub">Date fields are not available in the uploaded data</div>
+        <div class="no-result"><div class="no-result-icon">📅</div><div>No date fields detected in the uploaded files. Timeline analytics require Created Date, Close Date, or Delivery Date columns.</div></div>`;
+      return;
+    }
+
+    // Group by month
+    const monthKey = (d) => {
+      if (!d) return null;
+      const date = new Date(d);
+      if (isNaN(date)) return null;
+      return MONTHS[date.getMonth()] + ' ' + date.getFullYear();
+    };
+
+    const createdCounts = {};
+    const closedCounts = {};
+    const wonCounts = {};
+    const lostCounts = {};
+    const forecastByMonth = {};
+
+    for (const p of dataB.projects) {
+      const ck = monthKey(p.createdDate);
+      if (ck) createdCounts[ck] = (createdCounts[ck] || 0) + 1;
+
+      const clK = monthKey(p.closeDate);
+      if (clK) {
+        closedCounts[clK] = (closedCounts[clK] || 0) + 1;
+        if (p._sold) wonCounts[clK] = (wonCounts[clK] || 0) + 1;
+        else lostCounts[clK] = (lostCounts[clK] || 0) + 1;
+      }
+
+      const dk = monthKey(p.deliveryDate);
+      if (dk) {
+        const fc = (p.forecast2026 || 0) + (p.forecast2027 || 0);
+        forecastByMonth[dk] = (forecastByMonth[dk] || 0) + fc;
+      }
+    }
+
+    const allMonths = [...new Set([...Object.keys(createdCounts), ...Object.keys(closedCounts), ...Object.keys(forecastByMonth)])].sort((a,b) => {
+      const [ma, ya] = a.split(' ');
+      const [mb, yb] = b.split(' ');
+      const miA = MONTHS.indexOf(ma);
+      const miB = MONTHS.indexOf(mb);
+      if (ya !== yb) return parseInt(ya) - parseInt(yb);
+      return miA - miB;
+    });
+
+    const renderTimelineChart = (canvasId, data, label, color) => {
+      const vals = allMonths.map(m => data[m] || 0);
+      if (vals.every(v => v === 0)) {
+        document.getElementById(canvasId).parentElement.innerHTML = `
+          <div class="revenue-unavailable">
+            <div class="revenue-unavailable-icon">📅</div>
+            <div class="revenue-unavailable-title">No data available</div>
+            <div class="revenue-unavailable-sub">${label} data is not available for the current report.</div>
+          </div>`;
+        return;
+      }
+      chartInstances[canvasId] = new Chart(document.getElementById(canvasId), {
+        type: 'bar',
+        data: { labels: allMonths, datasets: [{ label, data: vals, backgroundColor: color, borderRadius: 4 }] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+      });
+    };
+
+    renderTimelineChart('cTimelineCreated', createdCounts, 'Created', '#2563eb');
+    renderTimelineChart('cTimelineClosed', closedCounts, 'Closed', '#0891b2');
+    renderTimelineChart('cTimelineWon', wonCounts, 'Won', '#059669');
+    renderTimelineChart('cTimelineLost', lostCounts, 'Lost', '#dc2626');
+
+    // Forecast trend (line chart)
+    const fcVals = allMonths.map(m => (forecastByMonth[m] || 0) / 100000);
+    if (fcVals.some(v => v > 0)) {
+      chartInstances.cTimelineForecast = new Chart(document.getElementById('cTimelineForecast'), {
+        type: 'line',
+        data: { labels: allMonths, datasets: [{ label: 'Forecast (₹L)', data: fcVals, borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.1)', fill: true, tension: 0.4, pointRadius: 4 }] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,grid:{color:'#e8ecf4'}},x:{grid:{display:false}}} }
+      });
+    } else {
+      document.getElementById('cTimelineForecast').parentElement.innerHTML = `
+        <div class="revenue-unavailable">
+          <div class="revenue-unavailable-icon">📅</div>
+          <div class="revenue-unavailable-title">No forecast data</div>
+          <div class="revenue-unavailable-sub">Forecast data is not available for timeline analysis.</div>
+        </div>`;
+    }
+  }
+
+  /* ─── Export Functions ──────────────────────────────────────── */
+  function toggleExportMenu() {
+    document.getElementById('exportDropdown').classList.toggle('show');
+  }
+
+  function exportExcel() {
+    if (!dataB.projects.length) return;
+    const wb = XLSX.utils.book_new();
+    const sB = dataB.summary;
+
+    // Executive Summary
+    const summary = [
+      ['Metric', 'Value'],
+      ['Total Projects', sB.totalProjects],
+      ['Total Value', sB.totalValue],
+      ['Total Area', sB.totalArea],
+      ['Sold Projects', sB.soldCount],
+      ['Sold Value', sB.soldValue],
+      ['FY 2026 Forecast', sB.forecast2026],
+      ['FY 2027 Forecast', sB.forecast2027]
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), 'Executive Summary');
+
+    // Executive Insights
+    if (execInsights) {
+      const insightsSheet = [
+        ['Metric', 'Value', 'Direction'],
+        ...execInsights.insights.map(ins => [ins.label, ins.value, ins.dir])
+      ];
+      insightsSheet.push(['']);
+      insightsSheet.push(['Management Commentary', execInsights.commentary]);
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(insightsSheet), 'Executive Insights');
+    }
+
+    // Projects
+    const headers = ['Project ID','Project Name','Zone','City','Segment','Stage','Status','Value','Area','Product','Architect','Contractor','Channel Partner','FY 2026','FY 2027','Delivery Date','Close Date'];
+    const rows = dataB.projects.map(p => [
+      p.projectId || '', p.projectName || '', p.zone || '', p.city || '', p.segment || '', p.stage || '', p.status || '',
+      p.value || 0, p.area || 0, p.product || '', p.architect || '', p.contractor || '', p.channelPartner || '',
+      p.forecast2026 || 0, p.forecast2027 || 0,
+      p.deliveryDate ? formatDateDisplay(p.deliveryDate) : '', p.closeDate ? formatDateDisplay(p.closeDate) : ''
+    ]);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers, ...rows]), 'Projects');
+
+    // Distributions
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Zone','Count'], ...Object.entries(sB.zone)]), 'Zone Distribution');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Stage','Count'], ...Object.entries(sB.stage)]), 'Stage Distribution');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Product','Count'], ...Object.entries(sB.product)]), 'Product Distribution');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Segment','Count'], ...Object.entries(sB.segment)]), 'Segment Distribution');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Status','Count'], ...Object.entries(sB.status)]), 'Status Distribution');
+
+    // Product Mix
+    const prodMix = Object.keys(sB.product).map(pr => {
+      const proj = dataB.projects.filter(p => p.product === pr);
+      return [pr, proj.length, proj.reduce((a,p) => a + (p.value||0), 0), proj.reduce((a,p) => a + (p.area||0), 0)];
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Product','Projects','Revenue','Area'], ...prodMix]), 'Product Mix');
+
+    // Timeline Analytics
+    if (dataB.projects.some(p => p.createdDate || p.closeDate)) {
+      const monthKey = (d) => {
+        if (!d) return null;
+        const date = new Date(d);
+        if (isNaN(date)) return null;
+        return MONTHS[date.getMonth()] + ' ' + date.getFullYear();
+      };
+      const created = {}, closed = {}, won = {};
+      for (const p of dataB.projects) {
+        const ck = monthKey(p.createdDate);
+        if (ck) created[ck] = (created[ck] || 0) + 1;
+        const cl = monthKey(p.closeDate);
+        if (cl) { closed[cl] = (closed[cl] || 0) + 1; if (p._sold) won[cl] = (won[cl] || 0) + 1; }
+      }
+      const allM = [...new Set([...Object.keys(created), ...Object.keys(closed)])].sort();
+      const timelineData = allM.map(m => [m, created[m] || 0, closed[m] || 0, won[m] || 0]);
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Month','Created','Closed','Won'], ...timelineData]), 'Timeline Analytics');
+    }
+
+    XLSX.writeFile(wb, 'Dashboard_Summary_' + new Date().toISOString().split('T')[0] + '.xlsx');
+    toggleExportMenu();
+  }
+
+  function exportComparisonExcel() {
+    if (!comparison) return;
+    const wb = XLSX.utils.book_new();
+    const c = comparison;
+
+    const summary = [
+      ['Metric', 'Previous', 'Current', 'Delta'],
+      ['Total Projects', dataA.summary.totalProjects, dataB.summary.totalProjects, dataB.summary.totalProjects - dataA.summary.totalProjects],
+      ['Total Value', dataA.summary.totalValue, dataB.summary.totalValue, dataB.summary.totalValue - dataA.summary.totalValue],
+      ['Total Area', dataA.summary.totalArea, dataB.summary.totalArea, dataB.summary.totalArea - dataA.summary.totalArea],
+      ['Sold Projects', dataA.summary.soldCount, dataB.summary.soldCount, dataB.summary.soldCount - dataA.summary.soldCount],
+      ['New Projects', '-', c.newProjects.length, c.newProjects.length],
+      ['Removed Projects', c.removedProjects.length, '-', -c.removedProjects.length],
+      ['Completed Projects', '-', c.completedProjects.length, c.completedProjects.length],
+      ['Stage Changes', '-', c.stageChanges.length, c.stageChanges.length],
+      ['Backward Stage Moves', '-', c.backwardStages.length, -c.backwardStages.length],
+      ['Stalled Projects', '-', c.stalledProjects.length, c.stalledProjects.length],
+      ['Revenue Growth', '-', c.revenueGrowth, c.revenueGrowth],
+      ['Revenue Loss', '-', c.revenueLoss, -c.revenueLoss],
+      ['Net Growth %', '-', c.netGrowthPct.toFixed(2) + '%', c.netGrowthPct.toFixed(2) + '%']
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), 'Comparison Report');
+
+    const newHeaders = ['Project ID','Name','Zone','City','Value','Area','Stage','Status'];
+    const newRows = c.newProjects.map(p => [p.projectId||'', p.projectName||'', p.zone||'', p.city||'', p.value||0, p.area||0, p.stage||'', p.status||'']);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([newHeaders, ...newRows]), 'New Projects');
+
+    const remRows = c.removedProjects.map(p => [p.projectId||'', p.projectName||'', p.zone||'', p.city||'', p.value||0, p.area||0, p.stage||'', p.status||'']);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([newHeaders, ...remRows]), 'Removed Projects');
+
+    const stageHeaders = ['Project ID','Name','Previous Stage','Current Stage','Value'];
+    const stageRows = c.stageChanges.map(sc => [sc.curr.projectId||'', sc.curr.projectName||'', sc.from||'', sc.to||'', sc.curr.value||0]);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([stageHeaders, ...stageRows]), 'Stage Changes');
+
+    XLSX.writeFile(wb, 'Dashboard_Comparison_' + new Date().toISOString().split('T')[0] + '.xlsx');
+    toggleExportMenu();
+  }
+
+  function exportExceptionsExcel() {
+    if (!exceptionsData || !exceptionsData.length) return;
+    const wb = XLSX.utils.book_new();
+    const headers = ['Project ID','Project Name','Missing Fields','Source File','Value','Area','Zone','Stage'];
+    const rows = exceptionsData.map(e => [
+      e.projectId || '', e.projectName || '', e.missingFields.join(', '), e.source,
+      e.value || 0, e.area || 0, e.zone || '', e.stage || ''
+    ]);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers, ...rows]), 'Data Exceptions');
+    XLSX.writeFile(wb, 'Dashboard_Exceptions_' + new Date().toISOString().split('T')[0] + '.xlsx');
+    toggleExportMenu();
+  }
+
+  function exportPDF() {
+    window.print();
+    toggleExportMenu();
+  }
+
+  /* ─── Utilities ───────────────────────────────────────────── */
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('exportDropdown');
+    if (menu && menu.classList.contains('show') && !e.target.closest('.export-menu')) {
+      menu.classList.remove('show');
+    }
+  });
+
+  /* ─── Public API ────────────────────────────────────────── */
+  return {
+    onDragOver, onDragLeave, onDrop, handleFile,
+    clearFiles, openDashboard, backToUpload,
+    showView, selectSheet, closeSheetModal,
+    doSearch, debouncedSearch, showProjectDetail,
+    toggleExportMenu, exportExcel, exportComparisonExcel, exportPDF, exportExceptionsExcel,
+    filterExceptions
+  };
+})();
+</script>
+</body>
+</html>
